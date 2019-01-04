@@ -1,4 +1,0 @@
-#ifndef MKE2_INCLUDE_MKE2_H_
-#define MKE2_INCLUDE_MKE2_H_
-
-#endif // MKE2_INCLUDE_MKE2_H_
