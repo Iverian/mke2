@@ -11,7 +11,7 @@ public:
     friend bool operator==(const Vec& lhs, const Vec& rhs);
     friend bool operator!=(const Vec& lhs, const Vec& rhs);
     double dot(const Vec& rhs);
-    Vec& operator*(const double& rhs);
+    Vec operator*(const double& rhs);
     Vec operator+(const Vec& rhs);
     Vec operator-(const Vec& rhs);
 };
