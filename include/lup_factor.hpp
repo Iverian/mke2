@@ -3,6 +3,7 @@
 
 #include "dense_matrix.hpp"
 #include "vec.hpp"
+#include <cmath>
 
 class LupFactor {
 public:
