@@ -24,12 +24,14 @@ public:
     Shape shape() const override;
     Index non_zero() const;
 
-    std::pair<Value*, bool> insert(Index i, Index j, Value val = 0);
+    Value operator()(Index i, Index j) const;
+    Value fetch_add(Index i, Index j, Value val);
+    void clean_up();
+
     Value* find(Index i, Index j);
     const Value* find(Index i, Index j) const;
 
     friend std::ostream& operator<<(std::ostream& os, const SparceMatrix& obj);
-
     friend Vec operator*(const SparceMatrix& lhs, const Vec& rhs);
 
 protected:
