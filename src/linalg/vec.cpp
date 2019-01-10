@@ -34,12 +34,15 @@ double Vec::dot(const Vec& rhs)
     return res;
 }
 
-Vec& Vec::operator*(const double& rhs)
+Vec Vec::operator*(const double& rhs)
 {
-    for (auto i : (*this)) {
-        i *= rhs;
+    Vec res((*this).size());
+
+    for (size_t i = 0; i < res.size(); i++) {
+        res[i] = rhs * (*this)[i];
     }
-    return (*this);
+
+    return res;
 }
 
 Vec Vec::operator+(const Vec& rhs)
