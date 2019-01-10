@@ -1,5 +1,41 @@
+#include <debug.hpp>
 #include <util.hpp>
 #include <vec.hpp>
+
+Vec& Vec::operator+=(const Vec& rhs)
+{
+    check_if(size() == rhs.size(), "Dimensions are not equal");
+
+    for (size_t i = 0; i < size(); ++i) {
+        (*this)[i] += rhs[i];
+    }
+    return *this;
+}
+
+Vec& Vec::operator-=(const Vec& rhs)
+{
+    check_if(size() == rhs.size(), "Dimensions are not equal");
+
+    for (size_t i = 0; i < size(); ++i) {
+        (*this)[i] -= rhs[i];
+    }
+    return *this;
+}
+Vec& Vec::operator*=(double rhs)
+{
+    for (size_t i = 0; i < size(); ++i) {
+        (*this)[i] *= rhs;
+    }
+    return *this;
+}
+
+Vec& Vec::operator/=(double rhs)
+{
+    for (size_t i = 0; i < size(); ++i) {
+        (*this)[i] /= rhs;
+    }
+    return *this;
+}
 
 bool operator==(const Vec& lhs, const Vec& rhs)
 {
@@ -20,55 +56,48 @@ bool operator!=(const Vec& lhs, const Vec& rhs)
     return !(lhs == rhs);
 }
 
-double Vec::dot(const Vec& rhs)
+Vec operator+(const Vec& lhs, const Vec& rhs)
 {
-    check_if((*this).size() == rhs.size(),
-        "Dimensions are not equal");
-
-    double res = 0;
-
-    for (size_t i = 0; i < rhs.size(); i++) {
-        res += (*this)[i] * rhs[i];
-    }
-
-    return res;
+    auto result = lhs;
+    return (result += rhs);
 }
 
-Vec Vec::operator*(const double& rhs)
+Vec operator-(const Vec& lhs, const Vec& rhs)
 {
-    Vec res((*this).size());
-
-    for (size_t i = 0; i < res.size(); i++) {
-        res[i] = rhs * (*this)[i];
-    }
-
-    return res;
+    auto result = lhs;
+    return (result -= rhs);
 }
 
-Vec Vec::operator+(const Vec& rhs)
+Vec operator*(const Vec& lhs, double rhs)
 {
-    check_if((*this).size() == rhs.size(),
-        "Dimensions are not equal");
-    
-    Vec res(rhs.size());
-
-    for (size_t i = 0; i < rhs.size(); i++) {
-        res[i] = (*this)[i] + rhs[i];
-    }
-
-    return res;
+    auto result = lhs;
+    return (result *= rhs);
 }
 
-Vec Vec::operator-(const Vec& rhs)
+Vec operator*(double lhs, const Vec& rhs)
 {
-    check_if((*this).size() == rhs.size(),
-        "Dimensions are not equal");
-    
-    Vec res(rhs.size());
+    auto result = rhs;
+    return (result *= lhs);
+}
 
-    for (size_t i = 0; i < rhs.size(); i++) {
-        res[i] = (*this)[i] - rhs[i];
+Vec operator/(const Vec& lhs, double rhs)
+{
+    auto result = lhs;
+    return (result /= rhs);
+}
+
+double dot(const Vec& lhs, const Vec& rhs)
+{
+    check_if(lhs.size() == rhs.size(), "Dimensions are not equal");
+
+    double result = 0;
+    for (size_t i = 0; i < lhs.size(); ++i) {
+        result += lhs[i] * rhs[i];
     }
+    return result;
+}
 
-    return res;
+double sqr(const Vec& obj)
+{
+    return dot(obj, obj);
 }

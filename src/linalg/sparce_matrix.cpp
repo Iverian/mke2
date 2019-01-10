@@ -1,3 +1,4 @@
+#include <debug.hpp>
 #include <dense_matrix.hpp>
 #include <sparce_matrix.hpp>
 #include <util.hpp>
@@ -216,41 +217,52 @@ ostream& operator<<(ostream& os, const SparceMatrix& obj)
     return os;
 }
 
-Vec CG(const SparseMatrix& mat, const Vec& right_side)
+void admul(Vec& result, const Vec& x, const Vec& y, double c)
 {
-    int max_step = 10000;
-    int step = 0;
-    double accuracy = 1e-5;
+    size_t i, n = result.size();
 
-    Vec x0(right_side.size(), 0), 
-        r0(right_side), 
-        z0(right_side), 
-        xK(right_side.size()), 
-        rK(right_side.size()), 
-        zk(right_side.size()),
-        temp(right_side.size());
+#pragma omp parallel for
+    for (i = 0; i < n; ++i) {
+        result[i] = x[i] + c * y[i];
+    }
+}
+
+Vec solve_cg(const SparceMatrix& lhs, const Vec& rhs, Vec x0)
+{
+    static constexpr size_t max_step = 10000;
+    static constexpr double accuracy = 1e-5;
+
+    size_t step = 0;
     double alpha, beta;
 
+    check_if(rhs.size() == lhs.shape_.n, "Incompatible shapes");
+
+    if (x0.empty()) {
+        x0.resize(lhs.shape_.m, 0);
+    }
+
+    auto rc = rhs - lhs * x0;
+    auto zc = rc;
+    auto xc = x0;
+
+    Vec rp, zp, xp;
     do {
+        auto tmp = lhs * zc;
+        alpha = sqr(rc) / dot(zc, tmp);
 
-        temp = mat * z0;
+        xp = xc;
+        rp = rc;
+        admul(xc, xp, zc, alpha);
+        admul(rc, rp, tmp, -alpha);
 
-        alpha = (r0.dot(r0)) / (z0.dot(temp));
-
-        xK = x0 + (z0 * alpha);
-
-        rK = r0 - (temp * alpha);
-
-        if (((rK.dot(rK)) / (right_side.dot(right_side))) < accuracy) 
+        if (sqr(rc) / sqr(rhs) < accuracy) {
             break;
+        }
 
-        beta = (rK.dot(rK)) / (r0.dot(r0));
+        beta = sqr(rc) / sqr(rp);
+        admul(zc, rc, zp, beta);
 
-        zK = rK + z0 * beta;
+    } while (++step, step < max_step);
 
-        step++;
-
-    } while(step < max_step);
-
-    return xK;
+    return xc;
 }
