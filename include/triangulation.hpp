@@ -1,5 +1,5 @@
-#ifndef MKE2_INCLUDE_TRIANGULATION_H_
-#define MKE2_INCLUDE_TRIANGULATION_H_
+#ifndef MKE2_INCLUDE_TRIANGULATION_HPP_
+#define MKE2_INCLUDE_TRIANGULATION_HPP_
 
 #include <array>
 #include <memory>
@@ -65,4 +65,4 @@ private:
 
 Triang3d triangulate_cuboid(std::array<double, 3> dim, size_t scale);
 
-#endif // MKE2_INCLUDE_TRIANGULATION_H_
+#endif // MKE2_INCLUDE_TRIANGULATION_HPP_

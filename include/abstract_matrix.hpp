@@ -1,5 +1,5 @@
-#ifndef MKE2_INCLUDE_ABSTRACT_MATRIX_H_
-#define MKE2_INCLUDE_ABSTRACT_MATRIX_H_
+#ifndef MKE2_INCLUDE_ABSTRACT_MATRIX_HPP_
+#define MKE2_INCLUDE_ABSTRACT_MATRIX_HPP_
 
 #include <ostream>
 
@@ -23,4 +23,4 @@ public:
     virtual Shape shape() const = 0;
 };
 
-#endif // MKE2_INCLUDE_ABSTRACT_MATRIX_H_
+#endif // MKE2_INCLUDE_ABSTRACT_MATRIX_HPP_

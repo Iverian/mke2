@@ -1,5 +1,5 @@
-#ifndef MKE2_INCLUDE_ABSTRACT_LOCAL_EQ_H_
-#define MKE2_INCLUDE_ABSTRACT_LOCAL_EQ_H_
+#ifndef MKE2_INCLUDE_ABSTRACT_LOCAL_EQ_HPP_
+#define MKE2_INCLUDE_ABSTRACT_LOCAL_EQ_HPP_
 
 #include "dense_matrix.hpp"
 #include "triangulation.hpp"
@@ -22,4 +22,4 @@ public:
     virtual Vec get_boundary_vec() const = 0;
 };
 
-#endif // MKE2_INCLUDE_ABSTRACT_LOCAL_EQ_H_
+#endif // MKE2_INCLUDE_ABSTRACT_LOCAL_EQ_HPP_

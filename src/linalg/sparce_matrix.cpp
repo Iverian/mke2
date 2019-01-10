@@ -74,33 +74,65 @@ SparceMatrix::Index SparceMatrix::non_zero() const
     return data_.size();
 }
 
-pair<SparceMatrix::Value*, bool> SparceMatrix::insert(Index i, Index j,
-                                                      Value val)
+SparceMatrix::Value SparceMatrix::operator()(Index i, Index j) const
 {
-    Value* result = nullptr;
-    bool inserted = false;
+    auto ptr = find(i, j);
+    return (ptr != nullptr) ? *ptr : 0;
+}
+
+SparceMatrix::Value SparceMatrix::fetch_add(Index i, Index j, Value val)
+{
+    Value result = 0;
 
     if (index_in_range(i, j)) {
         auto b = begin(indices_);
         auto ifirst = b + indptr_[i];
         auto ilast = b + indptr_[i + 1];
+        auto pos = lower_bound(ifirst, ilast, j);
 
-        auto it = lower_bound(ifirst, ilast, j);
-        if (*it == j) {
-            result = &data_[it - b];
-            *result = val;
-        } else {
-            auto new_index = indices_.emplace(it, j);
-            result = &(*data_.emplace(begin(data_) + (it - b), val));
-            inserted = true;
+        if (*pos == j) {
+            result = (data_[pos - b] += val);
+        } else if (!isnear(val, 0)) {
+            indices_.emplace(pos, j);
+            data_.emplace(begin(data_) + (pos - b), val);
+            result = val;
 
-            for (auto j = i + 1; j < shape_.m + 1; ++j) {
+            for (auto j = i + 1; j < shape_.m; ++j) {
                 ++indptr_[j];
             }
         }
     }
 
-    return make_pair(result, inserted);
+    return result;
+}
+
+void SparceMatrix::clean_up()
+{
+    DataContainer new_data;
+    IndexContainer new_indptr(shape_.m + 1, 0);
+    IndexContainer new_indices;
+
+    Index pos = 0;
+    for (Index i = 0; i < shape_.m; ++i) {
+        for (; pos < indptr_[i + 1]; ++pos) {
+            auto& v = data_[pos];
+            if (!isnear(v, 0)) {
+                new_data.emplace_back(v);
+                new_indices.emplace_back(indices_[pos]);
+                ++new_indptr[i + 1];
+            }
+        }
+    }
+
+    new_data.shrink_to_fit();
+    new_indices.shrink_to_fit();
+    for (Index i = 0; i < shape_.m; ++i) {
+        new_indptr[i + 1] += new_indptr[i];
+    }
+
+    data_ = move(new_data);
+    indptr_ = move(new_indptr);
+    indices_ = move(new_indices);
 }
 
 SparceMatrix::Value* SparceMatrix::find(Index i, Index j)

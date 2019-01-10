@@ -1,5 +1,5 @@
-#ifndef MKE2_SRC_MKE2_CONSTANTS_H_
-#define MKE2_SRC_MKE2_CONSTANTS_H_
+#ifndef MKE2_SRC_MKE2_CONSTANTS_HPP_
+#define MKE2_SRC_MKE2_CONSTANTS_HPP_
 
 namespace cnst {
 
@@ -51,4 +51,4 @@ static constexpr double C[36] = {L[0] + 2 * L[1],
                                  L[1]};
 }
 
-#endif // MKE2_SRC_MKE2_CONSTANTS_H_
+#endif // MKE2_SRC_MKE2_CONSTANTS_HPP_
