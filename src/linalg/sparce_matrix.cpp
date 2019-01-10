@@ -90,15 +90,15 @@ SparceMatrix::Value SparceMatrix::fetch_add(Index i, Index j, Value val)
         auto ilast = b + indptr_[i + 1];
         auto pos = lower_bound(ifirst, ilast, j);
 
-        if (*pos == j) {
+        if (pos != end(indices_) && *pos == j) {
             result = (data_[pos - b] += val);
         } else if (!isnear(val, 0)) {
             indices_.emplace(pos, j);
             data_.emplace(begin(data_) + (pos - b), val);
             result = val;
 
-            for (auto j = i + 1; j < shape_.m; ++j) {
-                ++indptr_[j];
+            for (auto k = i + 1; k < shape_.m; ++k) {
+                ++indptr_[k];
             }
         }
     }
