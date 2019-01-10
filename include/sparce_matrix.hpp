@@ -33,6 +33,7 @@ public:
 
     friend std::ostream& operator<<(std::ostream& os, const SparceMatrix& obj);
     friend Vec operator*(const SparceMatrix& lhs, const Vec& rhs);
+    friend Vec CG(const SparceMatrix& mat, const Vec& vec);
 
 protected:
     bool index_in_range(Index i, Index j) const;
