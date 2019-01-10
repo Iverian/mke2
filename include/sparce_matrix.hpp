@@ -31,7 +31,6 @@ public:
     friend std::ostream& operator<<(std::ostream& os, const SparceMatrix& obj);
 
     friend Vec operator*(const SparceMatrix& lhs, const Vec& rhs);
-    friend Vec solve(const SparceMatrix& lhs, const Vec& rhs);
 
 protected:
     bool index_in_range(Index i, Index j) const;
