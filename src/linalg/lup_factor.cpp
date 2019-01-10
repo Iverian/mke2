@@ -1,20 +1,30 @@
-#include <debug.h>
-#include <lup_factor.h>
-#include <util.h>
+#include <debug.hpp>
+#include <lup_factor.hpp>
+#include <util.hpp>
 
 using namespace std;
 
 LupFactor::LupFactor(const DenseMatrix& in)
     : m_()
-    , mat_()
+    , mat_(in)
     , pivot_()
 {
-    auto s = in.shape();
+}
+
+LupFactor::LupFactor(DenseMatrix&& in)
+    : m_()
+    , mat_(in)
+    , pivot_()
+{
+}
+
+LupFactor& LupFactor::factor()
+{
+    auto s = mat_.shape();
     check_if(s.m == s.n,
              "Не могу посчитать LUP разложение неквадратной матрицы");
 
     m_ = s.m;
-    mat_ = in;
     pivot_ = PivotType(m_ + 1);
     for (Index i = 0; i < m_ + 1; ++i) {
         pivot_[i] = i;
@@ -45,6 +55,8 @@ LupFactor::LupFactor(const DenseMatrix& in)
             }
         }
     }
+
+    return *this;
 }
 
 const DenseMatrix& LupFactor::mat() const
@@ -78,9 +90,9 @@ Vec LupFactor::solve(const Vec& v) const
     return result;
 }
 
-DenseMatrix LupFactor::invert() const
+DenseMatrix LupFactor::inverse() const
 {
-    DenseMatrix result;
+    DenseMatrix result(mat_.shape());
 
     for (Index j = 0; j < m_; ++j) {
         for (Index i = 0; i < m_; ++i) {
@@ -88,6 +100,10 @@ DenseMatrix LupFactor::invert() const
                 result(i, j) = 1;
             } else {
                 result(i, j) = 0;
+            }
+
+            for (Index k = 0; k < i; ++k) {
+                result(i, j) -= mat_(i, k) * result(k, j);
             }
         }
 

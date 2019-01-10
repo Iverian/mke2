@@ -4,8 +4,8 @@
 #include <array>
 #include <vector>
 
-#include "abstract_matrix.h"
-#include "vec.h"
+#include "abstract_matrix.hpp"
+#include "vec.hpp"
 
 class DenseMatrix;
 

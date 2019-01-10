@@ -2,9 +2,10 @@
 #define MKE2_INCLUDE_POINT3D_H_
 
 #include <array>
+#include <functional>
 #include <vector>
 
-#include "vec.h"
+#include "vec.hpp"
 
 class Point3d;
 
@@ -27,6 +28,8 @@ public:
 
     explicit operator Vec() const;
 
+    friend std::ostream& operator<<(std::ostream& os, const Point3d& obj);
+
     friend bool operator==(const Point3d& lhs, const Point3d& rhs);
     friend bool operator!=(const Point3d& lhs, const Point3d& rhs);
 
@@ -38,10 +41,28 @@ public:
     friend Point3d operator/(const Point3d& lhs, double rhs);
 
     friend double dot(const Point3d& lhs, const Point3d& rhs);
+    friend Point3d cross(const Point3d& lhs, const Point3d& rhs);
+    friend double triple(const Point3d& a, const Point3d& b, const Point3d& c);
     friend double sqr(const Point3d& obj);
     friend double norm(const Point3d& obj);
     friend double dist(const Point3d& lhs, const Point3d& rhs);
     friend bool isnear(const Point3d& lhs, const Point3d& rhs);
+};
+
+namespace std {
+template <>
+struct hash<Point3d> {
+    using argument_type = Point3d;
+
+    size_t operator()(const argument_type& key) const
+    {
+        return (hasher_(key[0]) << 2) ^ (hasher_(key[1]) << 1)
+            ^ hasher_(key[0]);
+    }
+
+private:
+    hash<double> hasher_;
+};
 };
 
 #endif // MKE2_INCLUDE_POINT3D_H_

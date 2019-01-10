@@ -1,5 +1,5 @@
-#include <point3d.h>
-#include <util.h>
+#include <point3d.hpp>
+#include <util.hpp>
 
 #include <cmath>
 
@@ -43,6 +43,11 @@ Point3d& Point3d::operator/=(double rhs)
 Point3d::operator Vec() const
 {
     return Vec(::begin(*this), ::end(*this));
+}
+
+ostream& operator<<(ostream& os, const Point3d& obj)
+{
+    return os << "[" << obj[0] << ", " << obj[1] << ", " << obj[2] << "]";
 }
 
 bool operator==(const Point3d& lhs, const Point3d& rhs)
@@ -98,6 +103,13 @@ Point3d operator/(const Point3d& lhs, double rhs)
     return (result /= rhs);
 }
 
+Point3d cross(const Point3d& lhs, const Point3d& rhs)
+{
+    return Point3d(lhs[1] * rhs[2] - lhs[2] * rhs[1],
+                   lhs[2] * rhs[0] - lhs[0] * rhs[2],
+                   lhs[0] * rhs[1] - lhs[1] * rhs[0]);
+}
+
 double dot(const Point3d& lhs, const Point3d& rhs)
 {
     double result = 0;
@@ -105,6 +117,11 @@ double dot(const Point3d& lhs, const Point3d& rhs)
         result += lhs[i] * rhs[i];
     }
     return result;
+}
+
+double triple(const Point3d& a, const Point3d& b, const Point3d& c)
+{
+    return dot(a, cross(b, c));
 }
 
 double sqr(const Point3d& obj)

@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include <triangulation.h>
+#include <triangulation.hpp>
 
 using namespace std;
 

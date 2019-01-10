@@ -1,5 +1,5 @@
-#include <util.h>
-#include <vec.h>
+#include <util.hpp>
+#include <vec.hpp>
 
 bool operator==(const Vec& lhs, const Vec& rhs)
 {

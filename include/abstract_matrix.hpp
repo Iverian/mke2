@@ -1,7 +1,6 @@
 #ifndef MKE2_INCLUDE_ABSTRACT_MATRIX_H_
 #define MKE2_INCLUDE_ABSTRACT_MATRIX_H_
 
-#include <cstdlib>
 #include <ostream>
 
 class AbstractMatrix {
@@ -12,17 +11,16 @@ public:
     struct Shape {
         Index m;
         Index n;
+
+        friend std::ostream& operator<<(std::ostream& os, const Shape& obj);
+        friend bool operator==(const Shape& lhs, const Shape& rhs);
+        friend bool operator!=(const Shape& lhs, const Shape& rhs);
     };
 
     virtual ~AbstractMatrix();
+
     virtual Index size() const;
     virtual Shape shape() const = 0;
 };
-
-std::ostream& operator<<(std::ostream& os, const AbstractMatrix::Shape& obj);
-bool operator==(const AbstractMatrix::Shape& lhs,
-                const AbstractMatrix::Shape& rhs);
-bool operator!=(const AbstractMatrix::Shape& lhs,
-                const AbstractMatrix::Shape& rhs);
 
 #endif // MKE2_INCLUDE_ABSTRACT_MATRIX_H_

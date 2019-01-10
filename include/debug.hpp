@@ -1,10 +1,9 @@
-#ifndef MKE2_SRC_UTIL_DEBUG_H_
-#define MKE2_SRC_UTIL_DEBUG_H_
+#ifndef MKE2_INCLUDE_DEBUG_H_
+#define MKE2_INCLUDE_DEBUG_H_
 
+#include <cstdio>
 #include <exception>
 #include <iostream>
-
-#include <fmt/ostream.h>
 
 #ifdef NDEBUG
 #define DEBUG_FLAG false
@@ -19,25 +18,26 @@
     } else                                                                    \
         std::cout
 
-#define throw_fmt(exception, fmt_string, ...)                                 \
+#define throw_fmt(fmt_string, ...)                                            \
     do {                                                                      \
-        throw exception(fmt::format("({}:{}) " fmt_string, __FILE__,          \
-                                    __LINE__, __VA_ARGS__));                  \
+        char what[BUFSIZ];                                                    \
+        snprintf(what, BUFSIZ, "(%s:%d)" fmt_string, __FILE__, __LINE__,      \
+                 __VA_ARGS__);                                                \
+        throw std::runtime_error(what);                                       \
     } while (0)
 
 #define check_if(condition, fmt_string, ...)                                  \
     do {                                                                      \
         if (!(condition)) {                                                   \
-            throw_fmt(std::runtime_error, fmt_string, __VA_ARGS__);           \
+            throw_fmt(fmt_string, __VA_ARGS__);                               \
         }                                                                     \
     } while (0)
 
 #define debug_fmt(fmt_string, ...)                                            \
     do {                                                                      \
-        DBG                                                                   \
-        {                                                                     \
-            fmt::print(std::cout, fmt_string "\n", __VA_ARGS__);              \
+        if (DEBUG_FLAG) {                                                     \
+            fprintf(stdout, fmt_string, __VA_ARGS__);                         \
         }                                                                     \
     } while (0)
 
-#endif // MKE2_SRC_UTIL_DEBUG_H_
+#endif // MKE2_INCLUDE_DEBUG_H_

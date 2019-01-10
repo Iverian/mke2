@@ -1,0 +1,37 @@
+// #ifndef MKE2_SRC_MKE2_MKE2_H_
+// #define MKE2_SRC_MKE2_MKE2_H_
+
+// #include <array>
+// #include <cmath>
+
+// #include "dense_matrix.hpp"
+// #include "triangulation.hpp"
+
+// class LocalEq {
+//     static DenseMatrix Cm;
+
+// public:
+//     struct Result {
+//         DenseMatrix Bk;
+//         Vec fk;
+//     };
+
+//     explicit LocalEq(const Triang3d::Node& node);
+//     Result get();
+
+// private:
+//     std::array<Vec, 3> get_df();
+//     DenseMatrix get_DQ();
+//     DenseMatrix get_Gk();
+//     DenseMatrix get_S0();
+//     DenseMatrix get_Sb();
+//     DenseMatrix get_Ub();
+//     DenseMatrix get_bmat(size_t index);
+
+//     DenseMatrix get_Bk();
+//     Vec get_fk();
+
+//     const Triang3d::Node& node_;
+// };
+
+// #endif // MKE2_SRC_MKE2_MKE2_H_

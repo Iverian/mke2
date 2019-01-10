@@ -1,4 +1,4 @@
-#include <abstract_matrix.h>
+#include <abstract_matrix.hpp>
 
 using namespace std;
 

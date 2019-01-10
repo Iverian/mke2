@@ -1,7 +1,7 @@
-#include <dense_matrix.h>
-#include <sparce_matrix.h>
-#include <util.h>
-#include <vec.h>
+#include <dense_matrix.hpp>
+#include <sparce_matrix.hpp>
+#include <util.hpp>
+#include <vec.hpp>
 
 #include <omp.h>
 

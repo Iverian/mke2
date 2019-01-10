@@ -3,8 +3,6 @@
 
 #include <vector>
 
-// using Vec = std::vector<double>;
-
 class Vec : public std::vector<double> {
     using Super = std::vector<double>;
 
