@@ -92,7 +92,7 @@ SparceMatrix::Value SparceMatrix::fetch_add(Index i, Index j, Value val)
 
         if (*pos == j) {
             result = (data_[pos - b] += val);
-        } else {
+        } else if (!isnear(val, 0)) {
             indices_.emplace(pos, j);
             data_.emplace(begin(data_) + (pos - b), val);
             result = val;
