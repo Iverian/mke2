@@ -1,5 +1,5 @@
-#ifndef MKE2_INCLUDE_VEC_H_
-#define MKE2_INCLUDE_VEC_H_
+#ifndef MKE2_INCLUDE_VEC_HPP_
+#define MKE2_INCLUDE_VEC_HPP_
 
 #include <vector>
 
@@ -12,4 +12,4 @@ public:
     friend bool operator!=(const Vec& lhs, const Vec& rhs);
 };
 
-#endif // MKE2_INCLUDE_VEC_H_
+#endif // MKE2_INCLUDE_VEC_HPP_
