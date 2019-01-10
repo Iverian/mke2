@@ -1,5 +1,5 @@
-#ifndef MKE2_SRC_MKE2_VAR17_H_
-#define MKE2_SRC_MKE2_VAR17_H_
+#ifndef MKE2_SRC_MKE2_VAR17_HPP_
+#define MKE2_SRC_MKE2_VAR17_HPP_
 
 #include <abstract_local_eq.hpp>
 
@@ -12,19 +12,18 @@ public:
     Vec get_internal_vec() const override;
     Vec get_boundary_vec() const override;
 
-private:
+protected:
     DenseMatrix get_dq_mat() const;
     DenseMatrix get_gk_mat() const;
     DenseMatrix get_s0_mat() const;
     DenseMatrix get_bskeleton() const;
     DenseMatrix get_face_bmat(size_t index) const;
 
+private:
     static DenseMatrix cm;
-
     Triang3d::Node p_;
-
     double v_;
     DenseMatrix s0_;
 };
 
-#endif // MKE2_SRC_MKE2_VAR17_H_
+#endif // MKE2_SRC_MKE2_VAR17_HPP_

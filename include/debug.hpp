@@ -1,5 +1,5 @@
-#ifndef MKE2_INCLUDE_DEBUG_H_
-#define MKE2_INCLUDE_DEBUG_H_
+#ifndef MKE2_INCLUDE_DEBUG_HPP_
+#define MKE2_INCLUDE_DEBUG_HPP_
 
 #include <cstdio>
 #include <exception>
@@ -40,4 +40,4 @@
         }                                                                     \
     } while (0)
 
-#endif // MKE2_INCLUDE_DEBUG_H_
+#endif // MKE2_INCLUDE_DEBUG_HPP_

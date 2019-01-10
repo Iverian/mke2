@@ -1,5 +1,5 @@
-#ifndef MKE2_INCLUDE_DENSE_MATRIX_H_
-#define MKE2_INCLUDE_DENSE_MATRIX_H_
+#ifndef MKE2_INCLUDE_DENSE_MATRIX_HPP_
+#define MKE2_INCLUDE_DENSE_MATRIX_HPP_
 
 #include "abstract_matrix.hpp"
 #include "vec.hpp"
@@ -81,4 +81,4 @@ DenseMatrix::DenseMatrix(Shape shape, InputIt first, InputIt last)
 {
 }
 
-#endif // MKE2_INCLUDE_DENSE_MATRIX_H_
+#endif // MKE2_INCLUDE_DENSE_MATRIX_HPP_

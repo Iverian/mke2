@@ -1,5 +1,5 @@
-#ifndef MKE2_INCLUDE_POINT3D_H_
-#define MKE2_INCLUDE_POINT3D_H_
+#ifndef MKE2_INCLUDE_POINT3D_HPP_
+#define MKE2_INCLUDE_POINT3D_HPP_
 
 #include <array>
 #include <functional>
@@ -65,4 +65,4 @@ private:
 };
 };
 
-#endif // MKE2_INCLUDE_POINT3D_H_
+#endif // MKE2_INCLUDE_POINT3D_HPP_

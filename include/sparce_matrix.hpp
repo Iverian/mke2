@@ -1,5 +1,5 @@
-#ifndef MKE2_INCLUDE_SPARCE_MATRIX_H_
-#define MKE2_INCLUDE_SPARCE_MATRIX_H_
+#ifndef MKE2_INCLUDE_SPARCE_MATRIX_HPP_
+#define MKE2_INCLUDE_SPARCE_MATRIX_HPP_
 
 #include <array>
 #include <vector>
@@ -31,7 +31,8 @@ public:
     friend std::ostream& operator<<(std::ostream& os, const SparceMatrix& obj);
 
     friend Vec operator*(const SparceMatrix& lhs, const Vec& rhs);
-    // friend Vec operator*(const Vec& lhs, const SparceMatrix& rhs);
+    friend Vec solve(const SparceMatrix& lhs, const Vec& rhs);
+
 protected:
     bool index_in_range(Index i, Index j) const;
 
@@ -42,4 +43,4 @@ private:
     Shape shape_;
 };
 
-#endif // MKE2_INCLUDE_SPARCE_MATRIX_H_
+#endif // MKE2_INCLUDE_SPARCE_MATRIX_HPP_
