@@ -8,6 +8,7 @@ void mv2_export(ostream& os, const Triangulation& t, const Vec& values)
 {
     auto m = t.nodes().size();
     auto n = t.elems().size();
+    auto q = t.third().size();
 
     vector<Point3d> nodes(m);
     for (auto& n : t.nodes()) {

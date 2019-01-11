@@ -154,12 +154,12 @@ bool SparceMatrix::index_in_range(Index i, Index j) const
     return i < shape_.m && j < shape_.n;
 }
 
-Vec& dot(Vec& result, const SparceMatrix& lhs, const Vec& rhs)
+Vec operator*(const SparceMatrix& lhs, const Vec& rhs)
 {
-    check_if(lhs.shape_.n == rhs.size() && lhs.shape_.m == result.size(),
-             "Incompatible shapes");
+    check_if(lhs.shape_.n == rhs.size(), "Incompatible shapes");
 
     ptrdiff_t i, m = ptrdiff_t(lhs.shape_.m);
+    Vec result(m, 0.);
 
 #pragma omp parallel for
     for (i = 0; i < m; ++i) {
@@ -175,50 +175,6 @@ Vec& dot(Vec& result, const SparceMatrix& lhs, const Vec& rhs)
         result[i] = u;
     }
 
-    return result;
-}
-
-Vec& dot(Vec& result, const Vec& lhs, const SparceMatrix& rhs)
-{
-    check_if(result.size() == rhs.shape_.n && lhs.size() == rhs.shape_.m,
-             "Incompatible shapes");
-
-    ptrdiff_t i, m = ptrdiff_t(rhs.shape_.m), n = ptrdiff_t(rhs.shape_.n);
-
-#pragma omp parallel
-    {
-        Vec rprivate(n, 0.);
-#pragma omp for
-        for (i = 0; i < m; ++i) {
-            auto ifirst = rhs.indptr_[i];
-            auto ilast = rhs.indptr_[i + 1];
-            if (ifirst < ilast) {
-                auto u = lhs[i];
-                for (size_t k = ifirst; k < ilast; ++k) {
-                    auto j = rhs.indices_[k];
-                    rprivate[j] += u * rhs.data_[k];
-                }
-            }
-        }
-#pragma omp flush(result)
-#pragma omp critical
-        result += rprivate;
-    }
-
-    return result;
-}
-
-Vec operator*(const SparceMatrix& lhs, const Vec& rhs)
-{
-    Vec result(lhs.shape_.m, 0.);
-    dot(result, lhs, rhs);
-    return result;
-}
-
-Vec operator*(const Vec& lhs, const SparceMatrix& rhs)
-{
-    Vec result(rhs.shape_.n, 0.);
-    dot(result, lhs, rhs);
     return result;
 }
 
@@ -306,11 +262,10 @@ Vec solve_cg(const SparceMatrix& lhs, const Vec& rhs, Vec x0)
     auto r = rhs - lhs * x0;
     auto x = x0;
     auto z = r;
-    auto t = Vec(m, 0.);
 
     double a, c, d;
     do {
-        dot(t, lhs, z);
+        auto t = lhs * z;
         c = sqr(r);
         a = c / dot(t, z);
 
