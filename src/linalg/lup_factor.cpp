@@ -2,6 +2,8 @@
 #include <lup_factor.hpp>
 #include <util.hpp>
 
+#include <cmath>
+
 using namespace std;
 
 LupFactor::LupFactor(const DenseMatrix& in)

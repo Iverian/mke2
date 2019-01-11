@@ -107,6 +107,29 @@ SparceMatrix::Value SparceMatrix::fetch_add(Index i, Index j, Value val)
     return result;
 }
 
+SparceMatrix::Value SparceMatrix::fetch_set(Index i, Index j, Value val)
+{
+    if (!isnear(val, 0) && index_in_range(i, j)) {
+        auto b = begin(indices_);
+        auto ifirst = b + indptr_[i];
+        auto ilast = b + indptr_[i + 1];
+        auto pos = lower_bound(ifirst, ilast, j);
+
+        if (pos != end(indices_) && *pos == j) {
+            data_[pos - b] = val;
+        } else {
+            indices_.emplace(pos, j);
+            data_.emplace(begin(data_) + (pos - b), val);
+
+            for (auto k = i + 1; k < shape_.m; ++k) {
+                ++indptr_[k];
+            }
+        }
+    }
+
+    return val;
+}
+
 void SparceMatrix::clean_up()
 {
     DataContainer new_data;

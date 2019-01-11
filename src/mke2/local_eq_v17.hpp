@@ -5,12 +5,10 @@
 
 class LocalEqV17 : public AbstractLocalEq {
 public:
-    LocalEqV17(const Triang3d::Node& node);
+    static const DenseMatrix cm;
 
-    DenseMatrix get_internal_mat() const override;
-    DenseMatrix get_boundary_mat() const override;
-    Vec get_internal_vec() const override;
-    Vec get_boundary_vec() const override;
+    Result get_internal(Triangulation::FiniteElementData elem) const override;
+    Result get_boundary(Triangulation::SurfaceElementData elem) const override;
 
 protected:
     DenseMatrix get_dq_mat() const;
@@ -18,12 +16,6 @@ protected:
     DenseMatrix get_s0_mat() const;
     DenseMatrix get_bskeleton() const;
     DenseMatrix get_face_bmat(size_t index) const;
-
-private:
-    static DenseMatrix cm;
-    Triang3d::Node p_;
-    double v_;
-    DenseMatrix s0_;
 };
 
 #endif // MKE2_SRC_MKE2_VAR17_HPP_

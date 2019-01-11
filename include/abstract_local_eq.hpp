@@ -8,18 +8,15 @@
 #include <functional>
 #include <memory>
 
-class AbstractLocalEq;
-
-using LocalEqGenerator
-    = std::function<std::shared_ptr<AbstractLocalEq>(const Triang3d::Node&)>;
-
 class AbstractLocalEq {
 public:
+    using Result = std::pair<DenseMatrix, Vec>;
+
     virtual ~AbstractLocalEq() = default;
-    virtual DenseMatrix get_internal_mat() const = 0;
-    virtual DenseMatrix get_boundary_mat() const = 0;
-    virtual Vec get_internal_vec() const = 0;
-    virtual Vec get_boundary_vec() const = 0;
+    virtual Result
+    get_internal(Triangulation::FiniteElementData elem) const = 0;
+    virtual Result
+    get_boundary(Triangulation::SurfaceElementData elem) const = 0;
 };
 
 #endif // MKE2_INCLUDE_ABSTRACT_LOCAL_EQ_HPP_

@@ -2,8 +2,8 @@
 #define MKE2_INCLUDE_DEBUG_HPP_
 
 #include <cstdio>
-#include <exception>
 #include <iostream>
+#include <stdexcept>
 
 #ifdef NDEBUG
 #define DEBUG_FLAG false
@@ -22,21 +22,21 @@
     do {                                                                      \
         char what[BUFSIZ];                                                    \
         snprintf(what, BUFSIZ, "(%s:%d)" fmt_string, __FILE__, __LINE__,      \
-                 __VA_ARGS__);                                                \
+                 ##__VA_ARGS__);                                              \
         throw std::runtime_error(what);                                       \
     } while (0)
 
 #define check_if(condition, fmt_string, ...)                                  \
     do {                                                                      \
         if (!(condition)) {                                                   \
-            throw_fmt(fmt_string, __VA_ARGS__);                               \
+            throw_fmt(fmt_string, ##__VA_ARGS__);                             \
         }                                                                     \
     } while (0)
 
 #define debug_fmt(fmt_string, ...)                                            \
     do {                                                                      \
         if (DEBUG_FLAG) {                                                     \
-            fprintf(stdout, fmt_string, __VA_ARGS__);                         \
+            fprintf(stdout, fmt_string, ##__VA_ARGS__);                       \
         }                                                                     \
     } while (0)
 

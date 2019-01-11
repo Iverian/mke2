@@ -134,6 +134,11 @@ double norm(const Point3d& obj)
     return sqrt(sqr(obj));
 }
 
+Point3d unit(const Point3d& obj)
+{
+    return obj / norm(obj);
+}
+
 double dist(const Point3d& lhs, const Point3d& rhs)
 {
     return norm(rhs - lhs);

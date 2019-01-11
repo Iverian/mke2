@@ -3,6 +3,7 @@
 
 #include <array>
 #include <functional>
+#include <ostream>
 #include <vector>
 
 #include "vec.hpp"
@@ -45,6 +46,7 @@ public:
     friend double triple(const Point3d& a, const Point3d& b, const Point3d& c);
     friend double sqr(const Point3d& obj);
     friend double norm(const Point3d& obj);
+    friend Point3d unit(const Point3d& obj);
     friend double dist(const Point3d& lhs, const Point3d& rhs);
     friend bool isnear(const Point3d& lhs, const Point3d& rhs);
 };

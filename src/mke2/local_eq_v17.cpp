@@ -8,108 +8,126 @@
 
 using namespace std;
 
-DenseMatrix LocalEqV17::cm({6, 6}, begin(cnst::C), end(cnst::C));
+const DenseMatrix LocalEqV17::cm({6, 6}, begin(cnst::C), end(cnst::C));
 
-LocalEqV17::LocalEqV17(const Triang3d::Node& node)
-    : p_(node)
-    , v_()
-    , s0_()
-{
-    v_ = triple(p_.v(0) - p_.v(3), p_.v(1) - p_.v(3), p_.v(2) - p_.v(3));
-    s0_ = get_s0_mat();
-}
-
-DenseMatrix LocalEqV17::get_internal_mat() const
-{
-    return v_ * (get_gk_mat() / 6 - sqr(cnst::omega) * s0_);
-}
-
-DenseMatrix LocalEqV17::get_boundary_mat() const
-{
-    return kroneker_product((5 * cnst::mu / 120) * get_bskeleton(),
-                            DenseMatrix::eye(3));
-}
-
-Vec LocalEqV17::get_internal_vec() const
-{
-    Vec g(12, 0.);
-    for (size_t i = 0; i < 4; ++i) {
-        g[3 * i + 2] = -cnst::p;
-    }
-    return v_ * s0_ * g;
-}
-
-Vec LocalEqV17::get_boundary_vec() const
-{
-    return Vec(12, 0.);
-}
-
-DenseMatrix LocalEqV17::get_dq_mat() const
-{
-    auto r = LupFactor(p_.vertex_view().append_row(Vec(4, 1.))).factor();
-    array<Vec, 3> f
-        = {r.solve({1, 0, 0}), r.solve({0, 1, 0}), r.solve({0, 0, 1})};
-
-    DenseMatrix result({6, 12});
-    for (size_t i = 0; i < 4; ++i) {
-        auto j = 3 * i;
-        result(0, j + 0) = f[0][i];
-        result(1, j + 1) = f[1][i];
-        result(2, j + 2) = f[2][i];
-        result(3, j + 0) = f[1][i];
-        result(3, j + 1) = f[0][i];
-        result(4, j + 0) = f[2][i];
-        result(4, j + 2) = f[0][i];
-        result(5, j + 1) = f[2][i];
-        result(5, j + 2) = f[1][i];
+struct InternalProxy {
+    explicit InternalProxy(Triangulation::FiniteElementData& pp)
+        : p(pp)
+        , s()
+        , v()
+    {
+        v = triple(p[0] - p[3], p[1] - p[3], p[2] - p[3]);
+        s = get_s_mat();
     }
 
-    return result;
-}
-
-DenseMatrix LocalEqV17::get_gk_mat() const
-{
-    auto dq = get_dq_mat();
-    auto dqt = dq.transpose();
-
-    return dq * cm * dqt;
-}
-
-DenseMatrix LocalEqV17::get_s0_mat() const
-{
-    DenseMatrix result({4, 4}, 1);
-
-    for (DenseMatrix::Index i = 0; i < 4; ++i) {
-        result(i, i) = 2;
-    }
-    result *= (cnst::rho / 120);
-    result = kroneker_product(result, DenseMatrix::eye(3));
-
-    return result;
-}
-
-DenseMatrix LocalEqV17::get_bskeleton() const
-{
-    DenseMatrix result({4, 4});
-    for (auto& i : p_.boundary()) {
-        if (p_.normal(i) == Point3d(0, 0, 1)) {
-            result += get_face_bmat(i);
+    DenseMatrix get_dq_mat() const
+    {
+        DenseMatrix mat({4, 4}, 1);
+        for (size_t i = 0; i < 3; ++i) {
+            for (size_t j = 0; j < 4; ++j) {
+                mat(i, j) = p[j][i];
+            }
         }
+        auto r = LupFactor(mat).factor();
+
+        array<Vec, 3> f
+            = {r.solve({1, 0, 0}), r.solve({0, 1, 0}), r.solve({0, 0, 1})};
+
+        DenseMatrix result({6, 12});
+        for (size_t i = 0; i < 4; ++i) {
+            auto j = 3 * i;
+            result(0, j + 0) = f[0][i];
+            result(1, j + 1) = f[1][i];
+            result(2, j + 2) = f[2][i];
+            result(3, j + 0) = f[1][i];
+            result(3, j + 1) = f[0][i];
+            result(4, j + 0) = f[2][i];
+            result(4, j + 2) = f[0][i];
+            result(5, j + 1) = f[2][i];
+            result(5, j + 2) = f[1][i];
+        }
+
+        return result;
     }
-    return result;
+
+    DenseMatrix get_gk_mat() const
+    {
+        auto dq = get_dq_mat();
+        auto dqt = dq.transpose();
+
+        return dq * LocalEqV17::cm * dqt;
+    }
+
+    DenseMatrix get_s_mat() const
+    {
+        DenseMatrix result({4, 4}, 1);
+
+        for (DenseMatrix::Index i = 0; i < 4; ++i) {
+            result(i, i) = 2;
+        }
+        result *= (cnst::rho / 120);
+        result = kroneker_product(result, DenseMatrix::eye(3));
+
+        return result;
+    }
+
+    LocalEqV17::Result get()
+    {
+        Vec g(12, 0.);
+        for (size_t i = 0; i < 4; ++i) {
+            g[3 * i + 2] = -cnst::p;
+        }
+
+        return {v * (get_gk_mat() / 6 - sqr(cnst::omega) * s), v * s * g};
+    }
+
+private:
+    Triangulation::FiniteElementData& p;
+    DenseMatrix s;
+    double v;
+};
+
+struct SurfaceProxy {
+
+    explicit SurfaceProxy(Triangulation::SurfaceElementData& pp)
+        : p(pp)
+        , s()
+        , v()
+    {
+        v = norm(cross(p[0] - p[2], p[1] - p[2]));
+        s = get_s_mat();
+    }
+
+    DenseMatrix get_s_mat()
+    {
+        DenseMatrix result({3, 3}, 1);
+        for (size_t i = 0; i < 3; ++i) {
+            result(i, i) = 2;
+        }
+        result *= 5 * cnst::mu / 120;
+        result = kroneker_product(result, DenseMatrix::eye(3));
+        return result;
+    }
+
+    LocalEqV17::Result get()
+    {
+        return {v * s, Vec(9, 0.)};
+    }
+
+private:
+    Triangulation::SurfaceElementData& p;
+    DenseMatrix s;
+    double v;
+};
+
+LocalEqV17::Result
+LocalEqV17::get_internal(Triangulation::FiniteElementData elem) const
+{
+    return InternalProxy(elem).get();
 }
 
-DenseMatrix LocalEqV17::get_face_bmat(size_t index) const
+LocalEqV17::Result
+LocalEqV17::get_boundary(Triangulation::SurfaceElementData elem) const
 {
-    DenseMatrix result({4, 4});
-    auto m = (index + 1) % 4;
-    auto n = (index + 2) % 4;
-    auto p = (index + 3) % 4;
-    auto s = norm(cross(p_.v(m) - p_.v(p), p_.v(n) - p_.v(p)));
-
-    result(m, m) = result(n, n) = result(p, p) = 2;
-    result(m, n) = result(m, p) = result(n, p) = 1;
-    result *= s;
-
-    return result;
+    return SurfaceProxy(elem).get();
 }

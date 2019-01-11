@@ -26,6 +26,7 @@ public:
 
     Value operator()(Index i, Index j) const;
     Value fetch_add(Index i, Index j, Value val);
+    Value fetch_set(Index i, Index j, Value val);
     void clean_up();
 
     Value* find(Index i, Index j);
@@ -33,8 +34,7 @@ public:
 
     friend std::ostream& operator<<(std::ostream& os, const SparceMatrix& obj);
     friend Vec operator*(const SparceMatrix& lhs, const Vec& rhs);
-    friend Vec solve_cg(const SparceMatrix& lhs, const Vec& rhs,
-                        Vec x0 = Vec());
+    friend Vec solve_cg(const SparceMatrix& lhs, const Vec& rhs, Vec x0);
 
 protected:
     bool index_in_range(Index i, Index j) const;
