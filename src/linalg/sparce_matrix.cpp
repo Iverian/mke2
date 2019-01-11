@@ -1,9 +1,9 @@
+#include <cmath>
 #include <debug.hpp>
 #include <dense_matrix.hpp>
 #include <sparce_matrix.hpp>
 #include <util.hpp>
 #include <vec.hpp>
-#include <cmath>
 
 #include <omp.h>
 
@@ -287,7 +287,7 @@ Vec solve_cg(const SparceMatrix& lhs, const Vec& rhs, Vec x0)
         uc = dot(z, r);
 
         b = (uc * a) / (up * w);
-        // p = r + b * (r - w * v)
+        // p = r + b * (p - w * v)
         admul_1(p, r, p, v, b, -w * b);
 
         // v = lhs * p
