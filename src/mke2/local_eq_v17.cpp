@@ -1,6 +1,7 @@
 #include "local_eq_v17.hpp"
 #include "constants.hpp"
 
+#include <debug.hpp>
 #include <lup_factor.hpp>
 #include <util.hpp>
 
@@ -66,6 +67,7 @@ struct InternalProxy {
             result(i, i) = 2;
         }
         result *= (cnst::rho / 120);
+
         result = kroneker_product(result, DenseMatrix::eye(3));
 
         return result;

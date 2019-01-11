@@ -35,6 +35,9 @@ public:
 
     friend std::ostream& operator<<(std::ostream& os, const SparceMatrix& obj);
     friend Vec operator*(const SparceMatrix& lhs, const Vec& rhs);
+    friend void dot(double* const result, const SparceMatrix& lhs,
+                    const Vec& rhs);
+
     friend Vec solve_cg(const SparceMatrix& lhs, const Vec& rhs, Vec x0);
 
 protected:

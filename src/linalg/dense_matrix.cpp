@@ -174,8 +174,9 @@ bool operator!=(const DenseMatrix& lhs, const DenseMatrix& rhs)
 
 ostream& operator<<(ostream& os, const DenseMatrix& obj)
 {
-    os << "{ \"shape\": " << obj.shape_ << ", \"data\": [";
+    os << "{\"shape\": " << obj.shape_ << ",\"data\": [";
     for (DenseMatrix::Index i = 0; i < obj.shape_.m; ++i) {
+        os << "[";
         for (DenseMatrix::Index j = 0; j < obj.shape_.n; ++j) {
             os << obj(i, j) << (j + 1 != obj.shape_.n ? ", " : "]");
         }
