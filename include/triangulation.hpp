@@ -10,6 +10,8 @@
 class Triangulation {
 public:
     static constexpr size_t N = 4;
+    static constexpr size_t SN = 3;
+
     struct OnFirst {
         bool on_sigma_1;
         bool on_sigma_2;
@@ -24,9 +26,9 @@ public:
     using NodeContainer = std::unordered_map<Point3d, Index>;
     using NodePtr = NodeContainer::const_pointer;
     using FiniteElement = std::array<NodePtr, N>;
-    using SurfaceElement = std::array<NodePtr, N - 1>;
+    using SurfaceElement = std::array<NodePtr, SN>;
     using FiniteElementData = std::array<Point3d, N>;
-    using SurfaceElementData = std::array<Point3d, N - 1>;
+    using SurfaceElementData = std::array<Point3d, SN>;
 
     explicit Triangulation(const std::array<double, 3>& dim);
 

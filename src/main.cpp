@@ -8,6 +8,7 @@
 
 #include <fstream>
 #include <memory>
+#include <stdexcept>
 
 using namespace std;
 

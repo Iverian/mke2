@@ -30,8 +30,8 @@ struct InternalProxy {
         }
         auto r = LupFactor(mat).factor();
 
-        array<Vec, 3> f
-            = {r.solve({1, 0, 0}), r.solve({0, 1, 0}), r.solve({0, 0, 1})};
+        array<Vec, 3> f = {r.solve({1, 0, 0, 0}), r.solve({0, 1, 0, 0}),
+                           r.solve({0, 0, 1, 0})};
 
         DenseMatrix result({6, 12});
         for (size_t i = 0; i < 4; ++i) {
@@ -55,7 +55,7 @@ struct InternalProxy {
         auto dq = get_dq_mat();
         auto dqt = dq.transpose();
 
-        return dq * LocalEqV17::cm * dqt;
+        return dqt * LocalEqV17::cm * dq;
     }
 
     DenseMatrix get_s_mat() const

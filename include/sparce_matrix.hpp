@@ -37,6 +37,8 @@ public:
     friend Vec solve_cg(const SparceMatrix& lhs, const Vec& rhs, Vec x0);
 
 protected:
+    template <class Callable>
+    Value fetch_modify(Index i, Index j, Callable&& f);
     bool index_in_range(Index i, Index j) const;
 
 private:
@@ -45,5 +47,38 @@ private:
     IndexContainer indices_;
     Shape shape_;
 };
+
+template <class Callable>
+SparceMatrix::Value SparceMatrix::fetch_modify(Index i, Index j, Callable&& f)
+{
+    Value result = 0;
+
+    if (index_in_range(i, j)) {
+        auto b = begin(indices_);
+        auto ifirst = b + indptr_[i];
+        auto ilast = b + indptr_[i + 1];
+        auto pos = lower_bound(ifirst, ilast, j);
+        auto k = Index(pos - b);
+
+        if (pos != end(indices_) && *pos == j) {
+            result = f(data_[k]);
+            data_[k] = result;
+        } else {
+            result = f(0);
+            if (!isnear(result, 0)) {
+                auto dpos = begin(data_) + k;
+
+                indices_.emplace(pos, j);
+                data_.emplace(dpos, result);
+
+                for (auto r = i; r < shape_.m; ++r) {
+                    ++indptr_[r + 1];
+                }
+            }
+        }
+    }
+
+    return result;
+}
 
 #endif // MKE2_INCLUDE_SPARCE_MATRIX_HPP_

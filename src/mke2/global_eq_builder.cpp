@@ -20,7 +20,7 @@ GlobalEqBuilder& GlobalEqBuilder::get()
         for (size_t i = 0; i < 4; ++i) {
             auto p = k[i]->second;
             for (size_t l = 0; l < 3; ++l) {
-                rhs_[l * m_ + p] += v[l * 4 + i];
+                rhs_[l * m_ + p] += v[l * Triangulation::N + i];
             }
         }
     }
@@ -31,14 +31,15 @@ GlobalEqBuilder& GlobalEqBuilder::get()
         for (size_t i = 0; i < 3; ++i) {
             auto p = s[i]->second;
             for (size_t l = 0; l < 3; ++l) {
-                rhs_[l * m_ + p] = r.second[l * 4 + i];
+                rhs_[l * m_ + p] = r.second[l * Triangulation::SN + i];
             }
 
             for (size_t j = 0; j < 3; ++j) {
                 auto q = s[j]->second;
                 for (size_t l = 0; l < 3; ++l) {
                     lhs_.fetch_add(l * m_ + p, l * m_ + q,
-                                   r.first[l * 4 + i, l * 4 + j]);
+                                   r.first[l * Triangulation::SN + i,
+                                           l * Triangulation::SN + j]);
                 }
             }
         }
@@ -77,11 +78,14 @@ GlobalEqBuilder& GlobalEqBuilder::get()
                     if (!t_.on_first(k[j])) {
                         for (size_t l = 0; l < 3; ++l) {
                             lhs_.fetch_add(l * m_ + p, l * m_ + q,
-                                           r.first(l * 4 + i, l * 4 + j));
+                                           r.first(l * Triangulation::N + i,
+                                                   l * Triangulation::N + j));
                         }
                     } else {
                         for (size_t l = 0; l < 3; ++l) {
-                            rhs_[l * m_ + p] -= r.first(l * 4 + i, l * 4 + j)
+                            rhs_[l * m_ + p]
+                                -= r.first(l * Triangulation::N + i,
+                                           l * Triangulation::N + j)
                                 * rhs_[l * m_ + q];
                         }
                     }

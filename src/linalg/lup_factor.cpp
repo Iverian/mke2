@@ -73,6 +73,8 @@ const LupFactor::PivotType& LupFactor::pivot() const
 
 Vec LupFactor::solve(const Vec& v) const
 {
+    check_if(v.size() == m_, "Incompatible shapes");
+
     Vec result(v.size());
 
     for (Index i = 0; i < m_; ++i) {

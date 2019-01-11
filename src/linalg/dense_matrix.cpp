@@ -50,7 +50,7 @@ const DenseMatrix::Super& DenseMatrix::data() const
     return result;
 }
 
-#define _(i, j) ((*this)[(shape_.m) * (i) + (j)])
+#define _(i, j) ((*this)[(shape_.n) * (i) + (j)])
 
 DenseMatrix::Value& DenseMatrix::operator()(Index i, Index j) noexcept
 {
@@ -263,7 +263,7 @@ DenseMatrix kroneker_product(const DenseMatrix& lhs, const DenseMatrix& rhs)
         for (DenseMatrix::Index j = 0; j < n; ++j) {
             for (DenseMatrix::Index r = 0; r < p; ++r) {
                 for (DenseMatrix::Index s = 0; s < q; ++s) {
-                    result(i * m + r, j * n + s) = lhs(i, j) * rhs(r, s);
+                    result(i * p + r, j * q + s) = lhs(i, j) * rhs(r, s);
                 }
             }
         }

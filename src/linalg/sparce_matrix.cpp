@@ -83,51 +83,16 @@ SparceMatrix::Value SparceMatrix::operator()(Index i, Index j) const
 
 SparceMatrix::Value SparceMatrix::fetch_add(Index i, Index j, Value val)
 {
-    Value result = 0;
-
-    if (index_in_range(i, j)) {
-        auto b = begin(indices_);
-        auto ifirst = b + indptr_[i];
-        auto ilast = b + indptr_[i + 1];
-        auto pos = lower_bound(ifirst, ilast, j);
-
-        if (pos != end(indices_) && *pos == j) {
-            result = (data_[pos - b] += val);
-        } else if (!isnear(val, 0)) {
-            indices_.emplace(pos, j);
-            data_.emplace(begin(data_) + (pos - b), val);
-            result = val;
-
-            for (auto k = i + 1; k < shape_.m; ++k) {
-                ++indptr_[k];
-            }
-        }
-    }
-
-    return result;
+    return fetch_modify(i, j, [&val](auto x) { return x + val; });
 }
 
 SparceMatrix::Value SparceMatrix::fetch_set(Index i, Index j, Value val)
 {
-    if (!isnear(val, 0) && index_in_range(i, j)) {
-        auto b = begin(indices_);
-        auto ifirst = b + indptr_[i];
-        auto ilast = b + indptr_[i + 1];
-        auto pos = lower_bound(ifirst, ilast, j);
-
-        if (pos != end(indices_) && *pos == j) {
-            data_[pos - b] = val;
-        } else {
-            indices_.emplace(pos, j);
-            data_.emplace(begin(data_) + (pos - b), val);
-
-            for (auto k = i + 1; k < shape_.m; ++k) {
-                ++indptr_[k];
-            }
-        }
+    Value result = 0;
+    if (!isnear(val, 0)) {
+        result = fetch_modify(i, j, [&val](auto) { return val; });
     }
-
-    return val;
+    return result;
 }
 
 void SparceMatrix::clean_up()
@@ -254,7 +219,6 @@ Vec solve_cg(const SparceMatrix& lhs, const Vec& rhs, Vec x0)
     static constexpr double accuracy = 1e-5;
 
     size_t step = 0;
-    double alpha, beta;
 
     check_if(rhs.size() == lhs.shape_.n, "Incompatible shapes");
 
@@ -269,7 +233,7 @@ Vec solve_cg(const SparceMatrix& lhs, const Vec& rhs, Vec x0)
     Vec rp, zp, xp;
     do {
         auto tmp = lhs * zc;
-        alpha = sqr(rc) / dot(zc, tmp);
+        auto alpha = sqr(rc) / dot(zc, tmp);
 
         xp = xc;
         rp = rc;
@@ -280,8 +244,8 @@ Vec solve_cg(const SparceMatrix& lhs, const Vec& rhs, Vec x0)
             break;
         }
 
-        beta = sqr(rc) / sqr(rp);
-        admul(zc, rc, zp, beta);
+        zp = zc;
+        admul(zc, rc, zp, sqr(rc) / sqr(rp));
 
     } while (++step, step < max_step);
 
