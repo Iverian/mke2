@@ -31,7 +31,7 @@ GlobalEqBuilder& GlobalEqBuilder::get()
         for (size_t i = 0; i < 3; ++i) {
             auto p = s[i]->second;
             for (size_t l = 0; l < 3; ++l) {
-                rhs_[l * m_ + p] = r.second[l * 4 + p];
+                rhs_[l * m_ + p] = r.second[l * 4 + i];
             }
 
             for (size_t j = 0; j < 3; ++j) {
