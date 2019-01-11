@@ -3,6 +3,7 @@
 #include <sparce_matrix.hpp>
 #include <util.hpp>
 #include <vec.hpp>
+#include <cmath>
 
 #include <omp.h>
 
