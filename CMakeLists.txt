@@ -21,6 +21,7 @@ include(${CMAKE_BINARY_DIR}/conan.cmake)
 conan_cmake_run(
     REQUIRES
         gtest/1.8.1@bincrafters/stable
+        fmt/5.2.1@bincrafters/stable
     BASIC_SETUP CMAKE_TARGETS
     BUILD missing
 )
@@ -63,11 +64,18 @@ target_include_directories(libmke2
         "src"
 )
 
+target_link_libraries(libmke2
+    PRIVATE
+        CONAN_PKG::fmt
+)
+
 add_executable(mke2 ${MAIN_EXECUTABLE})
 
 target_link_libraries(mke2
     PUBLIC
         libmke2
+    PRIVATE
+        CONAN_PKG::fmt
 )
 ###################################################
 

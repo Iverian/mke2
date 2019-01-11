@@ -56,7 +56,8 @@ Triangulation::append_nodes(const vector<Point3d>& vp)
 {
     vector<NodePtr> result;
     result.reserve(vp.size());
-    transform(begin(vp), end(vp), back_inserter(result), append_node);
+    transform(begin(vp), end(vp), back_inserter(result),
+              [this](auto& p) { return append_node(p); });
     return result;
 }
 

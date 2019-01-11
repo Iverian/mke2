@@ -17,9 +17,10 @@ public:
 
     GlobalEqBuilder& get();
 
-private:
-    std::array<Index, 3> node_coeff(Index p);
+    SparceMatrix& mat();
+    Vec& vec();
 
+private:
     const Triangulation& t_;
     std::shared_ptr<AbstractLocalEq> g_;
     Index m_;

@@ -91,7 +91,12 @@ GlobalEqBuilder& GlobalEqBuilder::get()
     return *this;
 }
 
-array<GlobalEqBuilder::Index, 3> GlobalEqBuilder::node_coeff(Index p)
+SparceMatrix& GlobalEqBuilder::mat()
 {
-    return {p, m_ + p, 2 * m_ + p};
+    return lhs_;
+}
+
+Vec& GlobalEqBuilder::vec()
+{
+    return rhs_;
 }

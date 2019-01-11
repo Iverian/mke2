@@ -1,7 +1,7 @@
-#ifndef MKE2_SRC_MKE2_VAR17_HPP_
-#define MKE2_SRC_MKE2_VAR17_HPP_
+#ifndef MKE2_INCLUDE_LOCAL_EQ_V17_HPP
+#define MKE2_INCLUDE_LOCAL_EQ_V17_HPP
 
-#include <abstract_local_eq.hpp>
+#include "abstract_local_eq.hpp"
 
 class LocalEqV17 : public AbstractLocalEq {
 public:
@@ -18,4 +18,4 @@ protected:
     DenseMatrix get_face_bmat(size_t index) const;
 };
 
-#endif // MKE2_SRC_MKE2_VAR17_HPP_
+#endif // MKE2_INCLUDE_LOCAL_EQ_V17_HPP

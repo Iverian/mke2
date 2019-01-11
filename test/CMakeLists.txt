@@ -3,7 +3,7 @@ enable_testing()
 
 file(GLOB TEST_SOURCES "src/test_*.cpp")
 
-###################################################################################################
+###################################################
 # Make all tests in sigle executable
 add_executable(all_tests
     "src/all_tests.cpp"
@@ -19,12 +19,13 @@ target_link_libraries(all_tests
     PRIVATE
         libmke2
         CONAN_PKG::gtest
+        CONAN_PKG::fmt
 )
 
 add_test(all_tests all_tests)
-###################################################################################################
+###################################################
 
-###################################################################################################
+###################################################
 # Make separate tests
 foreach(_TEST_FILE ${TESTS_SOURCES})
     get_filename_component(_TEST_NAME ${_TEST_FILE} NAME_WE)
@@ -39,8 +40,9 @@ foreach(_TEST_FILE ${TESTS_SOURCES})
         PRIVATE
             libmke2
             CONAN_PKG::gtest
+            CONAN_PKG::fmt
     )
 
     add_test(${_TEST_NAME} ${_TEST_NAME})
 endforeach()
-###################################################################################################
+###################################################
