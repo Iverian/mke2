@@ -191,7 +191,7 @@ bool SparceMatrix::index_in_range(Index i, Index j) const
 
 Vec operator*(const SparceMatrix& lhs, const Vec& rhs)
 {
-    long i, k, m = lhs.shape_.m;
+    ptrdiff_t i, m = ptrdiff_t(lhs.shape_.m);
     Vec result(m, 0.);
 
 #pragma omp parallel for
@@ -200,7 +200,7 @@ Vec operator*(const SparceMatrix& lhs, const Vec& rhs)
         auto ifirst = lhs.indptr_[i];
         auto ilast = lhs.indptr_[i + 1];
         if (ifirst < ilast) {
-            for (k = ifirst; k < ilast; ++k) {
+            for (size_t k = ifirst; k < ilast; ++k) {
                 u += lhs.data_[k] * rhs[lhs.indices_[k]];
             }
         }
@@ -240,7 +240,7 @@ ostream& operator<<(ostream& os, const SparceMatrix& obj)
 
 void admul(Vec& result, const Vec& x, const Vec& y, double c)
 {
-    long i, n = result.size();
+    ptrdiff_t i, n = ptrdiff_t(result.size());
 
 #pragma omp parallel for
     for (i = 0; i < n; ++i) {
