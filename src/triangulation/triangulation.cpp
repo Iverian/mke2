@@ -49,7 +49,7 @@ Triangulation::NodePtr Triangulation::append_node(const Point3d& p)
         }
     }
 
-    return &(*it);
+    return result;
 }
 
 vector<Triangulation::NodePtr>
@@ -122,7 +122,9 @@ Triangulation Triangulation::cuboid(const array<double, 3>& dim, size_t scale)
     array<double, 3> s;
     auto d = *min_element(begin(dim), end(dim));
 
-    scale = max(1ull, scale);
+    if (scale == 0) {
+        scale = 1;
+    }
     for (size_t i = 0; i < 3; ++i) {
         m[i] = scale * size_t(dim[i] / d);
         s[i] = dim[i] / m[i];
