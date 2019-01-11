@@ -44,7 +44,7 @@ GlobalEqBuilder& GlobalEqBuilder::get()
         }
     }
 
-    // ГУ первого рода Sigma_1
+    // ГУ первого рода Sigma_1 (x, z)
     for (auto& n : t_.first()[0]) {
         for (size_t i = 0; i < 3; ++i) {
             auto p = n->second;
@@ -55,7 +55,7 @@ GlobalEqBuilder& GlobalEqBuilder::get()
         }
     }
 
-    // ГУ первого рода Sigma_2
+    // ГУ первого рода Sigma_2 (y)
     for (auto& n : t_.first()[1]) {
         for (size_t i = 0; i < 3; ++i) {
             auto p = n->second;
@@ -69,6 +69,8 @@ GlobalEqBuilder& GlobalEqBuilder::get()
         auto r = g_->get_internal(t_.data(k));
         for (size_t i = 0; i < 4; ++i) {
             auto p = k[i]->second;
+            auto fp = t_.on_first(k[i]);
+
             if (!t_.on_first(k[i])) {
                 for (size_t j = 0; j < 4; ++j) {
                     auto q = k[j]->second;

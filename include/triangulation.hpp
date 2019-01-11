@@ -10,6 +10,15 @@
 class Triangulation {
 public:
     static constexpr size_t N = 4;
+    struct OnFirst {
+        bool on_sigma_1;
+        bool on_sigma_2;
+
+        operator bool()
+        {
+            return on_sigma_1 || on_sigma_2;
+        }
+    };
 
     using Index = size_t;
     using NodeContainer = std::unordered_map<Point3d, Index>;
@@ -38,7 +47,7 @@ public:
                                 size_t scale);
 
     bool on_third(const SurfaceElement& e) const;
-    bool on_first(const NodePtr& n) const;
+    OnFirst on_first(const NodePtr& n) const;
 
 private:
     std::array<double, 3> dim_;

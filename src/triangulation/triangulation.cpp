@@ -40,10 +40,11 @@ Triangulation::NodePtr Triangulation::append_node(const Point3d& p)
     auto [it, flag] = nodes_.insert({p, nodes_.size()});
     auto result = &(*it);
     if (flag) {
-        if (isnear(p[0], 0) || isnear(p[0], dim_[0])) {
+        auto first_flag = on_first(result);
+        if (first_flag.on_sigma_1) {
             first_[0].push_back(result);
         }
-        if (isnear(p[1], 0) || isnear(p[1], dim_[1])) {
+        if (first_flag.on_sigma_2) {
             first_[1].push_back(result);
         }
     }
@@ -96,18 +97,21 @@ bool Triangulation::on_third(const SurfaceElement& e) const
         && isnear(e[2]->first[2], dim_[2]);
 }
 
-bool Triangulation::on_first(const NodePtr& n) const
+Triangulation::OnFirst Triangulation::on_first(const NodePtr& n) const
 {
+    OnFirst result{false, false};
+
     auto& p = n->first;
     // Sigma_1
     if (isnear(p[0], 0) || isnear(p[0], dim_[0])) {
-        return true;
+        result.on_sigma_1 = true;
     }
     // Sigma_2
     if (isnear(p[1], 0) || isnear(p[1], dim_[1])) {
-        return true;
+        result.on_sigma_2 = true;
     }
-    return false;
+
+    return result;
 }
 
 Triangulation Triangulation::cuboid(const array<double, 3>& dim, size_t scale)

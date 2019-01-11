@@ -10,22 +10,6 @@ include(CMakePackageConfigHelpers)
 set(CMAKE_CXX_STANDARD 17)
 list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
 
-if(NOT EXISTS ${CMAKE_BINARY_DIR}/conan.cmake)
-    message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
-    file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/master/conan.cmake"
-                  "${CMAKE_BINARY_DIR}/conan.cmake")
-endif()
-
-include(${CMAKE_BINARY_DIR}/conan.cmake)
-
-conan_cmake_run(
-    REQUIRES
-        gtest/1.8.1@bincrafters/stable
-        fmt/5.2.1@bincrafters/stable
-    BASIC_SETUP CMAKE_TARGETS
-    BUILD missing
-)
-
 ###################################################
 # Declare dependencies
 find_package(OpenMP REQUIRED)
@@ -64,19 +48,10 @@ target_include_directories(libmke2
         "src"
 )
 
-target_link_libraries(libmke2
-    PRIVATE
-        CONAN_PKG::fmt
-)
-
 add_executable(mke2 ${MAIN_EXECUTABLE})
 
 target_link_libraries(mke2
     PUBLIC
         libmke2
-    PRIVATE
-        CONAN_PKG::fmt
 )
 ###################################################
-
-add_subdirectory(test)
