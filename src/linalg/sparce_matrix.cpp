@@ -154,10 +154,12 @@ bool SparceMatrix::index_in_range(Index i, Index j) const
     return i < shape_.m && j < shape_.n;
 }
 
-Vec operator*(const SparceMatrix& lhs, const Vec& rhs)
+Vec& dot(Vec& result, const SparceMatrix& lhs, const Vec& rhs)
 {
+    check_if(lhs.shape_.n == rhs.size() && lhs.shape_.m == result.size(),
+             "Incompatible shapes");
+
     ptrdiff_t i, m = ptrdiff_t(lhs.shape_.m);
-    Vec result(m, 0.);
 
 #pragma omp parallel for
     for (i = 0; i < m; ++i) {
@@ -173,6 +175,50 @@ Vec operator*(const SparceMatrix& lhs, const Vec& rhs)
         result[i] = u;
     }
 
+    return result;
+}
+
+Vec& dot(Vec& result, const Vec& lhs, const SparceMatrix& rhs)
+{
+    check_if(result.size() == rhs.shape_.n && lhs.size() == rhs.shape_.m,
+             "Incompatible shapes");
+
+    ptrdiff_t i, m = ptrdiff_t(rhs.shape_.m), n = ptrdiff_t(rhs.shape_.n);
+
+#pragma omp parallel
+    {
+        Vec rprivate(n, 0.);
+#pragma omp for
+        for (i = 0; i < m; ++i) {
+            auto ifirst = rhs.indptr_[i];
+            auto ilast = rhs.indptr_[i + 1];
+            if (ifirst < ilast) {
+                auto u = lhs[i];
+                for (size_t k = ifirst; k < ilast; ++k) {
+                    auto j = rhs.indices_[k];
+                    rprivate[j] += u * rhs.data_[k];
+                }
+            }
+        }
+#pragma omp flush(result)
+#pragma omp critical
+        result += rprivate;
+    }
+
+    return result;
+}
+
+Vec operator*(const SparceMatrix& lhs, const Vec& rhs)
+{
+    Vec result(lhs.shape_.m, 0.);
+    dot(result, lhs, rhs);
+    return result;
+}
+
+Vec operator*(const Vec& lhs, const SparceMatrix& rhs)
+{
+    Vec result(rhs.shape_.n, 0.);
+    dot(result, lhs, rhs);
     return result;
 }
 
@@ -203,7 +249,7 @@ ostream& operator<<(ostream& os, const SparceMatrix& obj)
     return os;
 }
 
-void admul(Vec& result, const Vec& x, const Vec& y, double c)
+Vec& admul(Vec& result, const Vec& x, const Vec& y, double c)
 {
     ptrdiff_t i, n = ptrdiff_t(result.size());
 
@@ -211,6 +257,34 @@ void admul(Vec& result, const Vec& x, const Vec& y, double c)
     for (i = 0; i < n; ++i) {
         result[i] = x[i] + c * y[i];
     }
+
+    return result;
+}
+
+Vec& admul2(Vec& result, const Vec& x, const Vec& y, const Vec& z, double c,
+            double d)
+{
+    ptrdiff_t i, n = ptrdiff_t(result.size());
+
+#pragma omp parallel for
+    for (i = 0; i < n; ++i) {
+        result[i] = x[i] + c * (y[i] - d * z[i]);
+    }
+
+    return result;
+}
+
+Vec& admul3(Vec& result, const Vec& x, const Vec& y, const Vec& z, double c,
+            double d)
+{
+    ptrdiff_t i, n = ptrdiff_t(result.size());
+
+#pragma omp parallel for
+    for (i = 0; i < n; ++i) {
+        result[i] = x[i] + c * y[i] + d * z[i];
+    }
+
+    return result;
 }
 
 Vec solve_cg(const SparceMatrix& lhs, const Vec& rhs, Vec x0)
@@ -219,35 +293,40 @@ Vec solve_cg(const SparceMatrix& lhs, const Vec& rhs, Vec x0)
     static constexpr double accuracy = 1e-5;
 
     size_t step = 0;
+    size_t m = lhs.shape_.m;
+    double eps = 0;
 
     check_if(rhs.size() == lhs.shape_.n, "Incompatible shapes");
 
     if (x0.empty()) {
-        x0.resize(lhs.shape_.m, 0);
+        x0.resize(m, 0);
     }
+    auto rsqr = sqr(rhs);
 
-    auto rc = rhs - lhs * x0;
-    auto zc = rc;
-    auto xc = x0;
+    auto r = rhs - lhs * x0;
+    auto x = x0;
+    auto z = r;
+    auto t = Vec(m, 0.);
 
-    Vec rp, zp, xp;
+    double a, c, d;
     do {
-        auto tmp = lhs * zc;
-        auto alpha = sqr(rc) / dot(zc, tmp);
+        dot(t, lhs, z);
+        c = sqr(r);
+        a = c / dot(t, z);
 
-        xp = xc;
-        rp = rc;
-        admul(xc, xp, zc, alpha);
-        admul(rc, rp, tmp, -alpha);
-
-        if (sqr(rc) / sqr(rhs) < accuracy) {
+        admul(x, x, z, a);
+        admul(r, r, t, -a);
+        d = sqr(r);
+        if (eps = sqrt(d / rsqr); eps < accuracy) {
             break;
         }
 
-        zp = zc;
-        admul(zc, rc, zp, sqr(rc) / sqr(rp));
-
+        admul(z, r, z, d / c);
     } while (++step, step < max_step);
 
-    return xc;
+    check_if(eps < accuracy,
+             "Iteration didn't converge after %llu steps with eps=%.5g", step,
+             eps);
+
+    return x;
 }
