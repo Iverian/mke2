@@ -5,6 +5,7 @@
 #include <triangulation.hpp>
 
 #include <fstream>
+#include <iostream>
 #include <memory>
 #include <stdexcept>
 
@@ -24,8 +25,11 @@ int main(int argc, char const* argv[])
     auto res
         = solve_cg(build.mat(), build.vec(), Vec(3 * t.nodes().size(), 0.));
 
-    ofstream of("out/v17_dbg.mv2");
-    mv2_export(of, t, res);
-
+    if (argc > 1) {
+        ofstream of(argv[1]);
+        mv2_export(of, t, res);
+    } else {
+        mv2_export(cout, t, res);
+    }
     return 0;
 }

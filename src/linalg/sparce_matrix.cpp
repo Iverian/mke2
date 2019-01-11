@@ -217,32 +217,6 @@ Vec& admul(Vec& result, const Vec& x, const Vec& y, double c)
     return result;
 }
 
-Vec& admul2(Vec& result, const Vec& x, const Vec& y, const Vec& z, double c,
-            double d)
-{
-    ptrdiff_t i, n = ptrdiff_t(result.size());
-
-#pragma omp parallel for
-    for (i = 0; i < n; ++i) {
-        result[i] = x[i] + c * (y[i] - d * z[i]);
-    }
-
-    return result;
-}
-
-Vec& admul3(Vec& result, const Vec& x, const Vec& y, const Vec& z, double c,
-            double d)
-{
-    ptrdiff_t i, n = ptrdiff_t(result.size());
-
-#pragma omp parallel for
-    for (i = 0; i < n; ++i) {
-        result[i] = x[i] + c * y[i] + d * z[i];
-    }
-
-    return result;
-}
-
 Vec solve_cg(const SparceMatrix& lhs, const Vec& rhs, Vec x0)
 {
     static constexpr size_t max_step = 10000;
