@@ -5,7 +5,7 @@ using namespace std;
 void mv2_export(ostream& os, const Triangulation& t, const Vec& values)
 {
     auto m = t.nodes().size();
-    os << m << 3 << " " << 3 << " Ux Uy Uz" << endl;
+    os << m << " " << 3 << " " << 3 << " Ux Uy Uz" << endl;
 
     for (auto& n : t.nodes()) {
         auto [p, i] = n;

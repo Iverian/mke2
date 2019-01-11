@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "abstract_matrix.hpp"
+#include "util.hpp"
 #include "vec.hpp"
 
 class DenseMatrix;
