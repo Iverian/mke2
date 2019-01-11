@@ -88,6 +88,7 @@ GlobalEqBuilder& GlobalEqBuilder::get()
         }
     }
 
+    lhs_.clean_up();
     return *this;
 }
 
