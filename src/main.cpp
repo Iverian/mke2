@@ -21,30 +21,26 @@ int main(int argc, char const* argv[])
 {
     static constexpr double tol = 1e-2;
 
-    try {
-        auto t = Triangulation::cuboid({xdim, ydim, zdim}, 2);
-        auto gen = make_shared<LocalEqV17>();
+    auto t = Triangulation::cuboid({xdim, ydim, zdim}, 2);
+    auto gen = make_shared<LocalEqV17>();
 
-        GlobalEqBuilder build(t, gen);
-        build.get();
+    GlobalEqBuilder build(t, gen);
+    build.get();
 
-        auto start = chrono::high_resolution_clock::now();
-        auto x0 = Vec(3 * t.nodes().size(), 1000.);
-        auto res = solve_cg(build.mat(), build.vec(), x0, tol);
-        auto finish = chrono::high_resolution_clock::now();
-        cdbg << chrono::duration_cast<chrono::milliseconds>(finish - start)
-                    .count()
-             << endl;
+    auto start = chrono::high_resolution_clock::now();
+    auto x0 = Vec(3 * t.nodes().size(), 1000.);
+    auto res = solve_cg(build.mat(), build.vec(), x0, tol);
+    auto finish = chrono::high_resolution_clock::now();
+    coutd
+        << chrono::duration_cast<chrono::milliseconds>(finish - start).count()
+        << endl;
 
-        if (argc > 1) {
-            ofstream of(argv[1]);
-            mv2_export(of, t, res);
-        } else {
-            mv2_export(cout, t, res);
-        }
-    } catch (const exception& err) {
-        cerr << "CRITICAL: " << err.what() << endl;
-        return 1;
+    if (argc > 1) {
+        ofstream of(argv[1]);
+        mv2_export(of, t, res);
+    } else {
+        mv2_export(cout, t, res);
     }
+
     return 0;
 }

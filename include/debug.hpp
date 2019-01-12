@@ -2,6 +2,7 @@
 #define MKE2_INCLUDE_DEBUG_HPP_
 
 #include <cstdio>
+#include <cstdlib>
 #include <iostream>
 #include <stdexcept>
 
@@ -13,30 +14,34 @@
 #define DBG if (true)
 #endif
 
-#define cdbg                                                                  \
+#define cerrd                                                                 \
     if (!DEBUG_FLAG) {                                                        \
     } else                                                                    \
         std::cerr
 
-#define throw_fmt(fmt_string, ...)                                            \
+#define coutd                                                                 \
+    if (!DEBUG_FLAG) {                                                        \
+    } else                                                                    \
+        std::cerr
+
+#define exit_fmt(fmt_string, ...)                                             \
     do {                                                                      \
-        char what[BUFSIZ];                                                    \
-        snprintf(what, BUFSIZ, "(%s:%d) " fmt_string, __FILE__, __LINE__,     \
-                 ##__VA_ARGS__);                                              \
-        throw std::runtime_error(what);                                       \
+        fprintf_s(stderr, "CRITICAL: (%s:%d) " fmt_string, __FILE__,          \
+                  __LINE__, ##__VA_ARGS__);                                   \
+        std::exit(1);                                                         \
     } while (0)
 
 #define check_if(condition, fmt_string, ...)                                  \
     do {                                                                      \
         if (!(condition)) {                                                   \
-            throw_fmt(fmt_string, ##__VA_ARGS__);                             \
+            exit_fmt(fmt_string, ##__VA_ARGS__);                              \
         }                                                                     \
     } while (0)
 
 #define debug_fmt(fmt_string, ...)                                            \
     do {                                                                      \
         if (DEBUG_FLAG) {                                                     \
-            fprintf(stdout, fmt_string, ##__VA_ARGS__);                       \
+            fprintf_s(stderr, fmt_string, ##__VA_ARGS__);                     \
         }                                                                     \
     } while (0)
 

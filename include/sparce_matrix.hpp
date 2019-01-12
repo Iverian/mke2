@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "abstract_matrix.hpp"
+#include "debug.hpp"
 #include "util.hpp"
 #include "vec.hpp"
 
@@ -18,8 +19,6 @@ public:
     SparceMatrix();
     SparceMatrix(const Shape& shape);
     SparceMatrix(const DenseMatrix& mat);
-    SparceMatrix(const DataContainer& data, const IndexContainer& indptr,
-                 const IndexContainer& indices, Shape shape);
 
     Index size() const override;
     Shape shape() const override;
@@ -44,7 +43,6 @@ public:
 protected:
     template <class Callable>
     Value fetch_modify(Index i, Index j, Callable&& f);
-    bool index_in_range(Index i, Index j) const;
 
 private:
     DataContainer data_;
@@ -56,30 +54,23 @@ private:
 template <class Callable>
 SparceMatrix::Value SparceMatrix::fetch_modify(Index i, Index j, Callable&& f)
 {
+    check_if(i < shape_.m && j < shape_.n, "Index out of range");
+
     Value result = 0;
 
-    if (index_in_range(i, j)) {
-        auto b = begin(indices_);
-        auto ifirst = b + indptr_[i];
-        auto ilast = b + indptr_[i + 1];
-        auto pos = lower_bound(ifirst, ilast, j);
-        auto k = Index(pos - b);
+    auto b = begin(indices_);
+    auto p = lower_bound(b + indptr_[i], b + indptr_[i + 1], j);
+    auto q = begin(data_) + Index(p - b);
 
-        if (pos != end(indices_) && *pos == j) {
-            result = data_[k];
-            data_[k] = f(data_[k]);
-        } else {
-            auto new_val = f(0);
-            if (!isnear(new_val, 0)) {
-                auto dpos = begin(data_) + k;
+    if (p != end(indices_) && *p == j) {
+        result = *q;
+        *q = f(*q);
+    } else if (auto new_val = f(0); !isnear(new_val, 0)) {
+        indices_.emplace(p, j);
+        data_.emplace(q, new_val);
 
-                indices_.emplace(pos, j);
-                data_.emplace(dpos, new_val);
-
-                for (auto r = i; r < shape_.m; ++r) {
-                    ++indptr_[r + 1];
-                }
-            }
+        for (auto r = i; r < shape_.m; ++r) {
+            ++indptr_[r + 1];
         }
     }
 

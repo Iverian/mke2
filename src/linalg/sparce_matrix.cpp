@@ -51,16 +51,6 @@ SparceMatrix::SparceMatrix(const DenseMatrix& mat)
     }
 }
 
-SparceMatrix::SparceMatrix(const DataContainer& data,
-                           const IndexContainer& indptr,
-                           const IndexContainer& indices, Shape shape)
-    : data_(data)
-    , indptr_(indptr)
-    , indices_(indices)
-    , shape_(shape)
-{
-}
-
 SparceMatrix::Index SparceMatrix::size() const
 {
     return shape_.m * shape_.n;
@@ -133,26 +123,21 @@ SparceMatrix::Value* SparceMatrix::find(Index i, Index j)
 
 const SparceMatrix::Value* SparceMatrix::find(Index i, Index j) const
 {
+    check_if(i < shape_.m && j < shape_.n, "Index out of range");
+
     const Value* result = nullptr;
 
-    if (index_in_range(i, j)) {
-        auto b = begin(indices_);
-        auto ifirst = b + indptr_[i];
-        auto ilast = b + indptr_[i + 1];
-        if (ifirst < ilast) {
-            auto it = lower_bound(ifirst, ilast, j);
-            if (it != ilast) {
-                result = &data_[it - b];
-            }
+    auto b = begin(indices_);
+    auto ifirst = b + indptr_[i];
+    auto ilast = b + indptr_[i + 1];
+    if (ifirst < ilast) {
+        auto it = lower_bound(ifirst, ilast, j);
+        if (it != ilast) {
+            result = &data_[it - b];
         }
     }
 
     return result;
-}
-
-bool SparceMatrix::index_in_range(Index i, Index j) const
-{
-    return i < shape_.m && j < shape_.n;
 }
 
 void dot(double* const result, const SparceMatrix& lhs, const Vec& rhs)
@@ -334,8 +319,8 @@ Vec solve_cg(const SparceMatrix& lhs, const Vec& rhs, Vec x0, const double tol)
              "Iteration didn't converge after %llu steps with eps = %.5g",
              step, eps);
 
-    cdbg << "Iteration converged with step = " << step << " and eps = " << eps
-         << endl;
+    coutd << "Iteration converged with step = " << step << " and eps = " << eps
+          << endl;
 
     return x;
 }
