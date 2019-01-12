@@ -3,6 +3,8 @@
 #include <util.hpp>
 
 #include <algorithm>
+#include <iterator>
+#include <unordered_set>
 
 using namespace std;
 
@@ -15,9 +17,19 @@ Triangulation::Triangulation(const array<double, 3>& dim)
 {
 }
 
+const array<double, 3>& Triangulation::dim() const
+{
+    return dim_;
+}
+
 const Triangulation::NodeContainer& Triangulation::nodes() const
 {
     return nodes_;
+}
+
+const vector<Triangulation::SurfaceElement>& Triangulation::triangles() const
+{
+    return triangles_;
 }
 
 const vector<Triangulation::FiniteElement>& Triangulation::elems() const
@@ -114,19 +126,51 @@ Triangulation::OnFirst Triangulation::on_first(const NodePtr& n) const
     return result;
 }
 
-Triangulation Triangulation::cuboid(const array<double, 3>& dim, size_t scale)
+bool Triangulation::is_boundary(const SurfaceElement& e) const
+{
+    auto d = data(e);
+    for (size_t i = 0; i < SN; ++i) {
+        auto& v = dim_[i];
+        bool one
+            = isnear(d[0][i], 0) && isnear(d[1][i], 0) && isnear(d[2][i], 0);
+        bool two
+            = isnear(d[0][i], v) && isnear(d[1][i], v) && isnear(d[2][i], v);
+
+        if (one || two) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void Triangulation::extract_triangles()
+{
+    unordered_set<SurfaceElement> unique;
+    for (auto& k : elems_) {
+        for (size_t i = 0; i < N; ++i) {
+            auto f = face(k, i);
+            if (is_boundary(f)) {
+                unique.insert(f);
+            }
+        }
+    }
+    triangles_.resize(unique.size());
+    copy(begin(unique), end(unique), begin(triangles_));
+}
+
+Triangulation Triangulation::cuboid(array<double, 3> dim, size_t scale)
 {
     Triangulation result(dim);
 
     array<size_t, 3> m;
     array<double, 3> s;
-    auto d = *min_element(begin(dim), end(dim));
+    auto mind = *min_element(begin(dim), end(dim));
 
     if (scale == 0) {
         scale = 1;
     }
     for (size_t i = 0; i < 3; ++i) {
-        m[i] = scale * size_t(dim[i] / d);
+        m[i] = scale * size_t(dim[i] / mind);
         s[i] = dim[i] / m[i];
     }
 

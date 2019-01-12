@@ -19,36 +19,41 @@ SparceMatrix::SparceMatrix()
 {
 }
 
-SparceMatrix::SparceMatrix(const Shape& shape)
+#define _(i, j) ((i) * (shape_.n) + (j))
+
+SparceMatrix::SparceMatrix(const Shape& shape, const DataContainer& vals)
     : data_()
-    , indptr_()
+    , indptr_(shape.m + 1)
     , indices_()
     , shape_(shape)
 {
-    indptr_.resize(shape.m + 1);
-}
+    if (!vals.empty()) {
+        for (Index i = 0; i < shape_.m; ++i) {
+            for (Index j = 0; j < shape_.n; ++j) {
+                auto& v = vals[_(i, j)];
+                if (!isnear(v, 0)) {
+                    data_.emplace_back(v);
+                    indices_.emplace_back(j);
+                    ++indptr_[i + 1];
+                }
+            }
+        }
 
-SparceMatrix::SparceMatrix(const DenseMatrix& mat)
-    : SparceMatrix(mat.shape())
-{
-    for (Index i = 0; i < shape_.m; ++i) {
-        for (Index j = 0; j < shape_.n; ++j) {
-            auto v = mat(i, j);
-            if (!isnear(v, 0)) {
-                data_.emplace_back(v);
-                indices_.emplace_back(j);
-                ++indptr_[i + 1];
+        data_.shrink_to_fit();
+        indices_.shrink_to_fit();
+        if (!data_.empty()) {
+            for (Index i = 0; i < shape_.m; ++i) {
+                indptr_[i + 1] += indptr_[i];
             }
         }
     }
+}
 
-    data_.shrink_to_fit();
-    indices_.shrink_to_fit();
-    if (!data_.empty()) {
-        for (auto it = next(begin(indptr_)); it != end(indptr_); ++it) {
-            *it += *prev(it);
-        }
-    }
+#undef _
+
+SparceMatrix::SparceMatrix(const DenseMatrix& mat)
+    : SparceMatrix(mat.shape(), mat.data())
+{
 }
 
 SparceMatrix::Index SparceMatrix::size() const
@@ -170,7 +175,7 @@ void dot(double* const result, const SparceMatrix& lhs, const Vec& rhs)
 
 Vec operator*(const SparceMatrix& lhs, const Vec& rhs)
 {
-    Vec result(lhs.shape_.m, 0.);
+    Vec result(lhs.shape_.n, 0.);
     dot(result.data(), lhs, rhs);
     return result;
 }
@@ -255,21 +260,63 @@ double dist(const Vec& lhs, const Vec& rhs)
     return sqrt(result);
 }
 
-Vec solve_cg(const SparceMatrix& lhs, const Vec& rhs, Vec x0, const double tol)
+Vec solve_cg(const SparceMatrix& lhs, const Vec& rhs, Vec x0,
+             const size_t max_iter, const Tolerance tol)
 {
-    static constexpr size_t max_step = 10000;
-
     check_if(rhs.size() == lhs.shape_.n, "Incompatible shapes");
 
-    size_t step = 0;
-    size_t m = lhs.shape_.m;
-    double eps = 0;
+    size_t step = 0, m = lhs.shape_.m;
+
+    if (x0.empty()) {
+        x0.resize(m, 0);
+    }
+
+    auto rsqr = sqr(rhs);
+    auto r = rhs - lhs * x0;
+    auto z = r;
+    auto x = move(x0);
+
+    Vec p(m, 0.);
+    double eps, a, b, c, d;
+
+    bool success = false;
+    do {
+        dot(p.data(), lhs, z);
+        c = sqr(r);
+        a = c / dot(p, z);
+        admul_0(x, x, z, a);
+        admul_0(r, r, p, -a);
+        d = sqr(r);
+        if (eps = sqrt(d / rsqr); isnear(eps, 0, tol)) {
+            success = true;
+            break;
+        }
+
+        b = d / c;
+        admul_0(z, r, z, b);
+    } while (++step, step < max_iter);
+
+    if (success) {
+        cerrd << "Iteration converged: eps = " << eps << ", step = " << step
+              << endl;
+    } else {
+        cerrd << "Iteration did not converge: eps = " << eps << endl;
+    }
+
+    return x;
+}
+
+Vec solve_bcg(const SparceMatrix& lhs, const Vec& rhs, Vec x0,
+              const size_t max_iter, const Tolerance tol)
+{
+    check_if(rhs.size() == lhs.shape_.n, "Incompatible shapes");
+
+    size_t step = 0, m = lhs.shape_.m;
 
     if (x0.empty()) {
         x0.resize(m, 0);
     }
     auto rsqr = sqr(rhs);
-
     auto r = rhs - lhs * x0;
     auto z = r;
     auto x = move(x0);
@@ -279,8 +326,9 @@ Vec solve_cg(const SparceMatrix& lhs, const Vec& rhs, Vec x0, const double tol)
     Vec s(m, 0.);
     Vec t(m, 0.);
     Vec h(m, 0.);
+    double eps, up, b, uc = 1, a = 1, w = 1;
 
-    double up, b, uc = 1, a = 1, w = 1;
+    bool success = false;
     do {
         up = uc;
         uc = dot(z, r);
@@ -311,17 +359,18 @@ Vec solve_cg(const SparceMatrix& lhs, const Vec& rhs, Vec x0, const double tol)
         // r = s - w * t
         admul_0(r, s, t, -w);
 
-        if (eps = sqrt(sqr(r) / rsqr); eps < tol) {
+        if (eps = sqrt(sqr(r) / rsqr); isnear(eps, 0, tol)) {
+            success = true;
             break;
         }
-    } while (++step, step < max_step);
+    } while (++step, step < max_iter);
 
-    check_if(eps < tol,
-             "Iteration didn't converge after %llu steps with eps = %.5g",
-             step, eps);
-
-    coutd << "Iteration converged with step = " << step << " and eps = " << eps
-          << endl;
+    if (success) {
+        cerrd << "Iteration converged: eps = " << eps << ", step = " << step
+              << endl;
+    } else {
+        cerrd << "Iteration did not converge: eps = " << eps << endl;
+    }
 
     return x;
 }

@@ -3,7 +3,7 @@
 
 #include <array>
 
-static constexpr double tol[3] = {1e-1, 1e-5, 1e-9};
+static constexpr double tol[3] = {1e-1, 1e-5, 1e-7};
 
 enum class Tolerance { SINGLE = 1, DOUBLE = 2 };
 

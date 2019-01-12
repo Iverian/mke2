@@ -36,3 +36,4 @@ out/
 data/
 build/
 .vscode
+*.mv2

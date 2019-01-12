@@ -17,7 +17,8 @@ public:
     using IndexContainer = std::vector<Index>;
 
     SparceMatrix();
-    SparceMatrix(const Shape& shape);
+    SparceMatrix(const Shape& shape,
+                 const DataContainer& vals = DataContainer());
     SparceMatrix(const DenseMatrix& mat);
 
     Index size() const override;
@@ -39,7 +40,12 @@ public:
                     const Vec& rhs);
 
     friend Vec solve_cg(const SparceMatrix& lhs, const Vec& rhs, Vec x0,
-                        const double tol);
+                        const size_t max_iter = 10000,
+                        const Tolerance tol = Tolerance::SINGLE);
+
+    friend Vec solve_bcg(const SparceMatrix& lhs, const Vec& rhs, Vec x0,
+                         const size_t max_iter = 10000,
+                         const Tolerance tol = Tolerance::SINGLE);
 
 protected:
     template <class Callable>

@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.0)
 project(mke2 VERSION 0.1.0 LANGUAGES CXX)
 
-set(TESTING_FLAG "ON")
+set(ENABLE_TESTS "ON")
+set(ENABLE_OPENMP "ON")
 
 ###################################################
 # Include additional cmake packages
@@ -14,7 +15,7 @@ list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
 
 ###################################################
 # Configure conan
-if (TESTING_FLAG)
+if (ENABLE_TESTS)
     if(NOT EXISTS ${CMAKE_BINARY_DIR}/conan.cmake)
         message(STATUS
             "Downloading conan.cmake from https://github.com/conan-io/cmake-conan"
@@ -38,7 +39,9 @@ endif()
 
 ###################################################
 # Declare dependencies
-find_package(OpenMP)
+if (ENABLE_OPENMP)
+    find_package(OpenMP)
+endif()
 
 if (OPENMP_FOUND)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -88,6 +91,6 @@ target_link_libraries(mke2
 )
 ###################################################
 
-if(TESTING_FLAG)
+if(ENABLE_TESTS)
     add_subdirectory(test)
 endif()

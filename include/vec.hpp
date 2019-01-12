@@ -1,6 +1,7 @@
 #ifndef MKE2_INCLUDE_VEC_HPP_
 #define MKE2_INCLUDE_VEC_HPP_
 
+#include <ostream>
 #include <vector>
 
 class Vec : public std::vector<double> {
@@ -13,6 +14,8 @@ public:
     Vec& operator-=(const Vec& rhs);
     Vec& operator*=(double rhs);
     Vec& operator/=(double rhs);
+
+    friend std::ostream& operator<<(std::ostream& os, const Vec& obj);
 
     friend bool operator==(const Vec& lhs, const Vec& rhs);
     friend bool operator!=(const Vec& lhs, const Vec& rhs);

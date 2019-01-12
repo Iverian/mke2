@@ -32,7 +32,9 @@ public:
 
     explicit Triangulation(const std::array<double, 3>& dim);
 
+    const std::array<double, 3>& dim() const;
     const NodeContainer& nodes() const;
+    const std::vector<SurfaceElement>& triangles() const;
     const std::vector<FiniteElement>& elems() const;
     const std::array<std::vector<NodePtr>, 2>& first() const;
     const std::vector<SurfaceElement>& third() const;
@@ -45,19 +47,42 @@ public:
     SurfaceElementData data(const SurfaceElement& e) const;
     SurfaceElement face(const FiniteElement& e, Index i) const;
 
-    static Triangulation cuboid(const std::array<double, 3>& dim,
-                                size_t scale);
+    bool is_boundary(const SurfaceElement& e) const;
+    void extract_triangles();
 
     bool on_third(const SurfaceElement& e) const;
     OnFirst on_first(const NodePtr& n) const;
+
+    static Triangulation cuboid(std::array<double, 3> dim, size_t scale);
 
 private:
     std::array<double, 3> dim_;
 
     NodeContainer nodes_;
     std::vector<FiniteElement> elems_;
+    std::vector<SurfaceElement> triangles_;
     std::array<std::vector<NodePtr>, 2> first_;
     std::vector<SurfaceElement> third_;
 };
+
+namespace std {
+template <size_t N>
+struct hash<array<Triangulation::NodePtr, N>> {
+    static constexpr size_t seed = 16651;
+    using argument_type = array<Triangulation::NodePtr, N>;
+
+    size_t operator()(const argument_type& key) const
+    {
+        size_t result = seed;
+        for (size_t i = 0; i < N; ++i) {
+            result = (result << 1) ^ h(key[i]);
+        }
+        return result;
+    }
+
+private:
+    hash<Triangulation::NodePtr> h;
+};
+}
 
 #endif // MKE2_INCLUDE_TRIANG_BUILDER_H_
