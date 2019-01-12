@@ -30,3 +30,27 @@ TEST(TestSparce, test_modify)
     ASSERT_DOUBLE_EQ(m(2, 0), 0);
     ASSERT_DOUBLE_EQ(m(2, 2), 3);
 }
+
+TEST(TestSparce, test_solve_1)
+{
+    SparceMatrix m({5, 5}, {1, 0, 0, 0, 0, 0, 4, 0, 1, 3, 0, 0, 3,
+                            0, 0, 2, 1, 0, 3, 1, 1, 0, 0, 1, 0});
+    Vec x{1000, 2000, 100, 4000, 1};
+    Vec x0{0, 0, 0, 0, 0};
+    auto b = m * x;
+    auto x1 = solve_cg(m, b, x0, 100);
+
+    ASSERT_EQ(x, x1);
+}
+
+TEST(TestSparce, test_solve_2)
+{
+    SparceMatrix m({5, 5}, {1, 0, 0, 0, 0, 0, 4, 0, 1, 3, 0, 0, 3,
+                            0, 0, 2, 1, 0, 3, 1, 1, 0, 0, 1, 0});
+    Vec x{1000, 2000, 100, 4000, 1};
+    Vec x0{0, 0, 0, 0, 0};
+    auto b = m * x;
+    auto x1 = solve_bcg(m, b, x0, 100);
+
+    ASSERT_EQ(x, x1);
+}
