@@ -53,6 +53,7 @@ public:
     DenseMatrix& operator/=(Value rhs);
 
     friend std::ostream& operator<<(std::ostream& os, const DenseMatrix& obj);
+
     friend bool operator==(const DenseMatrix& lhs, const DenseMatrix& rhs);
     friend bool operator!=(const DenseMatrix& lhs, const DenseMatrix& rhs);
 
@@ -67,6 +68,7 @@ public:
     friend DenseMatrix operator/(const DenseMatrix& lhs, Value rhs);
     friend Vec operator*(const DenseMatrix& lhs, const Vec& rhs);
     friend Vec operator*(const Vec& lhs, const DenseMatrix& rhs);
+
     friend DenseMatrix kroneker_product(const DenseMatrix& lhs,
                                         const DenseMatrix& rhs);
 

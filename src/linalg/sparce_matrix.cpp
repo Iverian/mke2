@@ -77,13 +77,14 @@ SparceMatrix::Value SparceMatrix::fetch_add(Index i, Index j, Value val)
     return fetch_modify(i, j, [&val](auto x) { return x + val; });
 }
 
+SparceMatrix::Value SparceMatrix::fetch_sub(Index i, Index j, Value val)
+{
+    return fetch_modify(i, j, [&val](auto x) { return x - val; });
+}
+
 SparceMatrix::Value SparceMatrix::fetch_set(Index i, Index j, Value val)
 {
-    Value result = 0;
-    if (!isnear(val, 0)) {
-        result = fetch_modify(i, j, [&val](auto) { return val; });
-    }
-    return result;
+    return fetch_modify(i, j, [&val](auto) { return val; });
 }
 
 void SparceMatrix::clean_up()
@@ -131,9 +132,9 @@ const SparceMatrix::Value* SparceMatrix::find(Index i, Index j) const
     auto ifirst = b + indptr_[i];
     auto ilast = b + indptr_[i + 1];
     if (ifirst < ilast) {
-        auto it = lower_bound(ifirst, ilast, j);
-        if (it != ilast) {
-            result = &data_[it - b];
+        auto p = lower_bound(ifirst, ilast, j);
+        if (p != end(indices_) && *p == j) {
+            result = &data_[Index(p - b)];
         }
     }
 
@@ -180,7 +181,7 @@ ostream& operator<<(ostream& os, const SparceMatrix& obj)
     auto m = obj.shape_.m;
     SparceMatrix::Index i, j;
 
-    os << "{ \"shape\": " << obj.shape_ << ", \"data\": [";
+    os << "{\"shape\": " << obj.shape_ << ", \"data\": [";
     for (i = 0; i < p; ++i) {
         auto pos = obj.indptr_[i];
         auto end = obj.indptr_[i + 1];

@@ -22,7 +22,7 @@
 #define coutd                                                                 \
     if (!DEBUG_FLAG) {                                                        \
     } else                                                                    \
-        std::cerr
+        std::cout
 
 #define exit_fmt(fmt_string, ...)                                             \
     do {                                                                      \

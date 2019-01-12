@@ -13,6 +13,7 @@ public:
         Index n;
 
         friend std::ostream& operator<<(std::ostream& os, const Shape& obj);
+
         friend bool operator==(const Shape& lhs, const Shape& rhs);
         friend bool operator!=(const Shape& lhs, const Shape& rhs);
     };
