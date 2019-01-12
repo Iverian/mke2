@@ -159,20 +159,26 @@ void dot(double* const result, const SparceMatrix& lhs, const Vec& rhs)
 {
     check_if(lhs.shape_.n == rhs.size(), "Incompatible shapes");
 
-    ptrdiff_t i, m = ptrdiff_t(lhs.shape_.m);
+    ptrdiff_t i;
+    const ptrdiff_t m = ptrdiff_t(lhs.shape_.m);
+    size_t ifirst, ilast, k;
+    double u;
 
-#pragma omp parallel for
-    for (i = 0; i < m; ++i) {
-        double u = 0;
-        auto ifirst = lhs.indptr_[i];
-        auto ilast = lhs.indptr_[i + 1];
-        if (ifirst < ilast) {
-            for (size_t k = ifirst; k < ilast; ++k) {
-                u += lhs.data_[k] * rhs[lhs.indices_[k]];
+#pragma omp parallel shared(result, lhs, rhs)
+    {
+#pragma omp for private(i, k, u, ifirst, ilast)
+        for (i = 0; i < m; ++i) {
+            u = 0;
+            ifirst = lhs.indptr_[i];
+            ilast = lhs.indptr_[i + 1];
+            if (ifirst < ilast) {
+                for (k = ifirst; k < ilast; ++k) {
+                    u += lhs.data_[k] * rhs[lhs.indices_[k]];
+                }
             }
-        }
 #pragma omp flush(result)
-        result[i] = u;
+            result[i] = u;
+        }
     }
 }
 
@@ -181,27 +187,6 @@ Vec operator*(const SparceMatrix& lhs, const Vec& rhs)
     Vec result(lhs.shape_.m, 0.);
     dot(result.data(), lhs, rhs);
     return result;
-
-    //     check_if(lhs.shape_.n == rhs.size(), "Incompatible shapes");
-
-    //     ptrdiff_t i, m = ptrdiff_t(lhs.shape_.m);
-    //     Vec result(m, 0.);
-
-    // #pragma omp parallel for
-    //     for (i = 0; i < m; ++i) {
-    //         double u = 0;
-    //         auto ifirst = lhs.indptr_[i];
-    //         auto ilast = lhs.indptr_[i + 1];
-    //         if (ifirst < ilast) {
-    //             for (size_t k = ifirst; k < ilast; ++k) {
-    //                 u += lhs.data_[k] * rhs[lhs.indices_[k]];
-    //             }
-    //         }
-    // #pragma omp flush(result)
-    //         result[i] = u;
-    //     }
-
-    //     return result;
 }
 
 ostream& operator<<(ostream& os, const SparceMatrix& obj)
@@ -231,41 +216,68 @@ ostream& operator<<(ostream& os, const SparceMatrix& obj)
     return os;
 }
 
-inline Vec& admul_0(Vec& result, const Vec& x, const Vec& y, double c)
+Vec& admul_0(Vec& result, const Vec& x, const Vec& y, double c)
 {
-    ptrdiff_t i, n = ptrdiff_t(result.size());
+    ptrdiff_t i;
+    const ptrdiff_t n = ptrdiff_t(result.size());
 
-#pragma omp parallel for
-    for (i = 0; i < n; ++i) {
-        result[i] = x[i] + c * y[i];
+#pragma omp parallel shared(result, x, y, c)
+    {
+#pragma omp for private(i)
+        for (i = 0; i < n; ++i) {
+            result[i] = x[i] + c * y[i];
+        }
+    }
+    return result;
+}
+
+Vec& admul_1(Vec& result, const Vec& x, const Vec& y, const Vec& z, double c,
+             double d)
+{
+    ptrdiff_t i;
+    const ptrdiff_t n = ptrdiff_t(result.size());
+
+#pragma omp parallel shared(result, x, y, z, c, d)
+    {
+#pragma omp for private(i)
+        for (i = 0; i < n; ++i) {
+            result[i] = x[i] + c * (y[i] + d * z[i]);
+        }
     }
 
     return result;
 }
 
-inline Vec& admul_1(Vec& result, const Vec& x, const Vec& y, const Vec& z,
-                    double c, double d)
+double dist(const Vec& lhs, const Vec& rhs)
 {
-    ptrdiff_t i, n = ptrdiff_t(result.size());
+    double result = 0;
+    ptrdiff_t i;
+    const ptrdiff_t n = ptrdiff_t(lhs.size());
 
-#pragma omp parallel for
-    for (i = 0; i < n; ++i) {
-        result[i] = x[i] + c * y[i] + d * z[i];
+#pragma omp parallel shared(lhs, rhs, result)
+    {
+        double u = 0;
+#pragma omp for private(i)
+        for (i = 0; i < n; ++i) {
+            u += sqr(lhs[i] - rhs[i]);
+        }
+#pragma omp flush(result)
+#pragma omp critical
+        result += u;
     }
 
-    return result;
+    return sqrt(result);
 }
 
-Vec solve_cg(const SparceMatrix& lhs, const Vec& rhs, Vec x0)
+Vec solve_cg(const SparceMatrix& lhs, const Vec& rhs, Vec x0, const double tol)
 {
     static constexpr size_t max_step = 10000;
-    static constexpr double tol = 1e-6;
+
+    check_if(rhs.size() == lhs.shape_.n, "Incompatible shapes");
 
     size_t step = 0;
     size_t m = lhs.shape_.m;
     double eps = 0;
-
-    check_if(rhs.size() == lhs.shape_.n, "Incompatible shapes");
 
     if (x0.empty()) {
         x0.resize(m, 0);
@@ -274,48 +286,56 @@ Vec solve_cg(const SparceMatrix& lhs, const Vec& rhs, Vec x0)
 
     auto r = rhs - lhs * x0;
     auto z = r;
-    auto x = x0;
+    auto x = move(x0);
 
     Vec p(m, 0.);
     Vec v(m, 0.);
     Vec s(m, 0.);
     Vec t(m, 0.);
+    Vec h(m, 0.);
 
     double up, b, uc = 1, a = 1, w = 1;
     do {
         up = uc;
         uc = dot(z, r);
 
-        b = (uc * a) / (up * w);
+        b = (uc / up) * (a / w);
         // p = r + b * (p - w * v)
-        admul_1(p, r, p, v, b, -w * b);
+        admul_1(p, r, p, v, b, -w);
 
         // v = lhs * p
         dot(v.data(), lhs, p);
         a = uc / dot(z, v);
+
+        // h = x + a * p
+        admul_0(h, x, p, a);
+        // if (dist(x, h) < tol) {
+        //     cdbg << "Exited at ??" << endl;
+        //     return h;
+        // }
+
         // s = r - a * v
         admul_0(s, r, v, -a);
 
         // t = lhs * s
         dot(t.data(), lhs, s);
         w = dot(t, s) / sqr(t);
+        admul_0(x, h, s, w);
 
-        if (w < tol) {
-            break;
-        }
-
-        // x = x + w * s + a * p
-        admul_1(x, x, s, p, w, a);
         // r = s - w * t
         admul_0(r, s, t, -w);
 
-        // if (eps = sqrt(sqr(r) / rsqr); eps < tol) {
-        //     break;
-        // }
+        if (eps = sqrt(sqr(r) / rsqr); eps < tol) {
+            break;
+        }
     } while (++step, step < max_step);
 
-    check_if(w < tol, "Iteration didn't converge after %llu steps with w=%.5g",
-             step, w);
+    check_if(eps < tol,
+             "Iteration didn't converge after %llu steps with eps = %.5g",
+             step, eps);
+
+    cdbg << "Iteration converged with step = " << step << " and eps = " << eps
+         << endl;
 
     return x;
 }

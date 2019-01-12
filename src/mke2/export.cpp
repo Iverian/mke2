@@ -24,15 +24,16 @@ void mv2_export(ostream& os, const Triangulation& t, const Vec& values)
            << " " << y << " " << z << endl;
     }
 
-    os << n << " " << 4 << " " << 0 << endl;
+    os << n << " " << 4 << " " << 4 << " A B C D" << endl;
     auto& elems = t.elems();
     for (size_t i = 0; i < elems.size(); ++i) {
         auto& e = elems[i];
         os << (i + 1) << " " << (e[0]->second + 1) << " " << (e[1]->second + 1)
-           << " " << (e[2]->second + 2) << " " << (e[3]->second + 3) << endl;
+           << " " << (e[2]->second + 2) << " " << (e[3]->second + 3) << " ";
+        os << "0 0 0 0" << endl;
     }
 
-    os << q << endl;
+    os << q << " " << 3 << endl;
     for (auto& e : t.third()) {
         os << (e[0]->second + 1) << " " << (e[1]->second + 1) << " "
            << (e[2]->second + 1) << endl;

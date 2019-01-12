@@ -19,18 +19,21 @@ static constexpr auto zdim = 200.;
 
 int main(int argc, char const* argv[])
 {
+    static constexpr double tol = 1e-2;
+
     try {
-        auto t = Triangulation::cuboid({xdim, ydim, zdim}, 4);
+        auto t = Triangulation::cuboid({xdim, ydim, zdim}, 2);
         auto gen = make_shared<LocalEqV17>();
 
         GlobalEqBuilder build(t, gen);
         build.get();
 
         auto start = chrono::high_resolution_clock::now();
-        auto res = solve_cg(build.mat(), build.vec(),
-                            Vec(3 * t.nodes().size(), 0.));
+        auto x0 = Vec(3 * t.nodes().size(), 1000.);
+        auto res = solve_cg(build.mat(), build.vec(), x0, tol);
         auto finish = chrono::high_resolution_clock::now();
-        cdbg << chrono::duration_cast<chrono::seconds>(finish - start).count()
+        cdbg << chrono::duration_cast<chrono::milliseconds>(finish - start)
+                    .count()
              << endl;
 
         if (argc > 1) {
@@ -40,7 +43,7 @@ int main(int argc, char const* argv[])
             mv2_export(cout, t, res);
         }
     } catch (const exception& err) {
-        cout << "CRITICAL: " << err.what() << endl;
+        cerr << "CRITICAL: " << err.what() << endl;
         return 1;
     }
     return 0;

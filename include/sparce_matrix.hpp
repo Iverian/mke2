@@ -38,7 +38,8 @@ public:
     friend void dot(double* const result, const SparceMatrix& lhs,
                     const Vec& rhs);
 
-    friend Vec solve_cg(const SparceMatrix& lhs, const Vec& rhs, Vec x0);
+    friend Vec solve_cg(const SparceMatrix& lhs, const Vec& rhs, Vec x0,
+                        const double tol);
 
 protected:
     template <class Callable>
@@ -65,15 +66,15 @@ SparceMatrix::Value SparceMatrix::fetch_modify(Index i, Index j, Callable&& f)
         auto k = Index(pos - b);
 
         if (pos != end(indices_) && *pos == j) {
-            result = f(data_[k]);
-            data_[k] = result;
+            result = data_[k];
+            data_[k] = f(data_[k]);
         } else {
-            result = f(0);
-            if (!isnear(result, 0)) {
+            auto new_val = f(0);
+            if (!isnear(new_val, 0)) {
                 auto dpos = begin(data_) + k;
 
                 indices_.emplace(pos, j);
-                data_.emplace(dpos, result);
+                data_.emplace(dpos, new_val);
 
                 for (auto r = i; r < shape_.m; ++r) {
                     ++indptr_[r + 1];

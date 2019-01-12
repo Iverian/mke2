@@ -16,12 +16,12 @@
 #define cdbg                                                                  \
     if (!DEBUG_FLAG) {                                                        \
     } else                                                                    \
-        std::cout
+        std::cerr
 
 #define throw_fmt(fmt_string, ...)                                            \
     do {                                                                      \
         char what[BUFSIZ];                                                    \
-        snprintf(what, BUFSIZ, "(%s:%d)" fmt_string, __FILE__, __LINE__,      \
+        snprintf(what, BUFSIZ, "(%s:%d) " fmt_string, __FILE__, __LINE__,     \
                  ##__VA_ARGS__);                                              \
         throw std::runtime_error(what);                                       \
     } while (0)
