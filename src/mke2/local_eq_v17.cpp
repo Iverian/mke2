@@ -75,12 +75,7 @@ struct InternalProxy {
 
     LocalEqV17::Result get()
     {
-        Vec g(12, 0.);
-        for (auto i = 0; i < 4; ++i) {
-            g[3 * i + 2] = -cnst::p;
-        }
-
-        return {v * (get_gk_mat() / 6 - sqr(cnst::omega) * s), v * s * g};
+        return {v * (get_gk_mat() / 6 - sqr(cnst::omega) * s), Vec(12, 0.)};
     }
 
 private:
@@ -113,7 +108,12 @@ struct SurfaceProxy {
 
     LocalEqV17::Result get()
     {
-        return {v * s, Vec(9, 0.)};
+        Vec t(9, 0.);
+        for (auto i = 0; i < 3; ++i) {
+            t[i * 3 + 2] = -cnst::p;
+        }
+
+        return {v * s, v * s * t};
     }
 
 private:

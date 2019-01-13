@@ -180,6 +180,78 @@ Vec solve(const SparceMatrix& lhs, const Vec& rhs, Vec x0)
     }
     auto rsqr = sqr(rhs);
     auto r = rhs - lhs * x0;
+    auto r0 = r;
+    auto x = move(x0);
+
+    // Vec p(m, 0.);
+    Vec v(m, 0.);
+    Vec s(m, 0.);
+    Vec t(m, 0.);
+    Vec y(m, 0.);
+    Vec z(m, 0.);
+    Vec q(m, 0.);
+    Vec p(m, 0.);
+
+    double dst = 0, res = 0, u = 1, a = 1, w = 1, b = 0;
+    do {
+        auto up = u;
+        u = dot(r0, r);
+
+        auto b = (u / up) * (a / w);
+        // p = r + b * (p - w * v)
+        cax_by_z(p, b, p, -w * b, v, r);
+        // v = lhs * p
+        dot(v.data(), lhs, p);
+
+        a = u / dot(r0, v);
+
+        // s = r - a * v
+        cax_y(s, -a, v, r);
+        // t = lhs * s
+        dot(t.data(), lhs, s);
+        w = dot(t, s) / sqr(t);
+
+        // x = a * p + w * s + x
+        cax_by_z(x, a, p, w, s, x);
+        // r = s - w * t
+        cax_y(r, -w, t, s);
+
+        res = sqrt(sqr(r) / rsqr);
+        if (isnear(res, 0, Tolerance::TRIPLE)) {
+            break;
+        }
+    } while (++step < max_iter);
+
+    res = cdist(lhs * x, rhs);
+    if (isnear(res, 0, Tolerance::DOUBLE)) {
+        cout << "Iteration converged: res = " << res << ", step = " << step
+             << endl;
+    } else {
+        cout << "Iteration did not converge: res = " << res
+             << ", step = " << step << endl;
+    }
+
+    return x;
+}
+
+Vec solve_p(const SparceMatrix& lhs, const Vec& rhs, Vec x0)
+{
+    static constexpr size_t max_iter = 100000;
+
+    auto [m, n] = lhs.shape();
+    check_if(rhs.size() == n, "Incompatible shapes");
+    check_if(!any_of(begin(lhs.diag_), end(lhs.diag_),
+                     [](auto& x) { return isnear(x, 0); }),
+             "Zero on diag");
+
+    size_t step = 0;
+
+    if (x0.empty()) {
+        x0.resize(m, 0);
+    }
+    auto rsqr = sqr(rhs);
+    auto r = rhs - lhs * x0;
+    auto r0 = r;
     auto x = move(x0);
 
     // Vec p(m, 0.);
@@ -195,46 +267,38 @@ Vec solve(const SparceMatrix& lhs, const Vec& rhs, Vec x0)
 
     double dst = 0, res = 0, u = 1, a = 1, w = 1, b = 0;
     do {
-        dot(v.data(), lhs, p);
-        w = dot(r, z);
-        a = w / dot(p, v);
-        cax_y(x, a, p, x);
-        copy(begin(r), end(r), begin(q));
-        cax_y(r, -a, v, r);
+        auto up = u;
+        u = dot(r0, r);
+
+        auto b = (u / up) * (a / w);
+        // p = r + b * (p - w * v)
+        cax_by_z(p, b, p, -w * b, v, r);
+        // y = diag(lhs)^{-1} * p
+        mdot_diag(y, lhs, p);
+        // v = lhs * y
+        dot(v.data(), lhs, y);
+
+        a = u / dot(r0, v);
+
+        // s = r - a * v
+        cax_y(s, -a, v, r);
+        // z = diag(lhs)^{-1} * s
+        mdot_diag(z, lhs, s);
+        // t = lhs * s
+        dot(t.data(), lhs, z);
+        // q = diag(lhs)^{-1} * t
+        mdot_diag(q, lhs, t);
+        w = dot(z, q) / sqr(q);
+
+        // x = a * p + w * s + x
+        cax_by_z(x, a, y, w, z, x);
+        // r = s - w * t
+        cax_y(r, -w, t, s);
+
         res = sqrt(sqr(r) / rsqr);
         if (isnear(res, 0, Tolerance::DOUBLE)) {
             break;
         }
-        mdot_diag(z, lhs, r);
-        b = dot(r, z) / w;
-        cax_y(p, b, p, z);
-        // auto up = u;
-        // u = dot(r0, r);
-
-        // auto b = (u / up) * (a / w);
-        // // p = r + b * (p - w * v)
-        // cax_by_z(p, b, p, -w * b, v, r);
-        // mdot_diag(y, lhs, p);
-        // // v = lhs * p
-        // dot(v.data(), lhs, y);
-
-        // a = u / dot(r0, v);
-
-        // // s = r - a * v
-        // cax_y(s, -a, v, r);
-        // mdot_diag(z, lhs, s);
-        // // t = lhs * s
-        // dot(t.data(), lhs, z);
-
-        // w = dot(t, s) / sqr(t);
-        // // x = a * p + w * s + x
-        // cax_by_z(x, a, p, w, s, x);
-        // // r = s - w * t
-        // cax_y(r, -w, t, s);
-        // res = sqrt(sqr(r) / rsqr);
-        // if (isnear(res, 0, Tolerance::DOUBLE)) {
-        //     break;
-        // }
     } while (++step < max_iter);
 
     res = sqrt(sqr(lhs * x - rhs));

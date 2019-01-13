@@ -39,7 +39,7 @@ public:
                     const Vec& rhs);
 
     friend Vec solve(const SparceMatrix& lhs, const Vec& rhs, Vec x0);
-
+    friend Vec solve_p(const SparceMatrix& lhs, const Vec& rhs, Vec x0);
     friend void mdot_diag(Vec& result, const SparceMatrix& lhs,
                           const Vec& rhs);
 

@@ -51,8 +51,9 @@ GlobalEqBuilder& GlobalEqBuilder::get()
             auto p = n->second;
             rhs_[p] = 0;
             rhs_[2 * m_ + p] = 0;
-            lhs_.fetch_set(p, p, 1);
-            lhs_.fetch_set(2 * m_ + p, 2 * m_ + p, 1);
+            for (auto l = 0; l < 3; ++l) {
+                lhs_.fetch_set(l * m_ + p, l * m_ + p, 1);
+            }
         }
     }
 
@@ -61,7 +62,9 @@ GlobalEqBuilder& GlobalEqBuilder::get()
         for (auto i = 0; i < 3; ++i) {
             auto p = n->second;
             rhs_[m_ + p] = 0;
-            lhs_.fetch_set(m_ + p, m_ + p, 1);
+            for (auto l = 0; l < 3; ++l) {
+                lhs_.fetch_set(l * m_ + p, l * m_ + p, 1);
+            }
         }
     }
 
