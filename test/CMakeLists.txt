@@ -17,7 +17,7 @@ target_include_directories(all_tests
 
 target_link_libraries(all_tests
     PRIVATE
-        libmke2
+        ${LIBPROXY}
         CONAN_PKG::gtest
 )
 

@@ -10,6 +10,7 @@
 #include <iostream>
 #include <memory>
 #include <stdexcept>
+#include <variant>
 
 using namespace std;
 
@@ -20,6 +21,11 @@ static constexpr auto zdim = 40.;
 int main(int argc, char const* argv[])
 {
     try {
+        double init = 0;
+        if (argc > 1) {
+            init = atof(argv[1]);
+        }
+
         auto t = Triangulation::cuboid({xdim, ydim, zdim}, 4);
         auto gen = make_shared<LocalEqV17>();
 
@@ -28,27 +34,23 @@ int main(int argc, char const* argv[])
 
         auto start = chrono::high_resolution_clock::now();
 
-        auto x0 = Vec(3 * t.nodes().size(), 1000.);
+        auto x0 = Vec(3 * t.nodes().size(), init);
         auto res = solve_bcg(build.mat(), build.vec(), x0);
 
         auto finish = chrono::high_resolution_clock::now();
-        cerrd << "Iteration finished in "
-              << chrono::duration_cast<chrono::milliseconds>(finish - start)
-                     .count()
-              << "ms" << endl;
+        cout << "Iteration finished in "
+             << chrono::duration_cast<chrono::milliseconds>(finish - start)
+                    .count()
+             << "ms" << endl;
 
         t.extract_triangles();
-        if (argc > 1) {
-            ofstream of(argv[1]);
+        if (argc > 2) {
+            ofstream of(argv[2]);
             mv2_export(of, t, res);
         } else {
             mv2_export(cout, t, res);
         }
 
-        if (argc > 2) {
-            ofstream of(argv[2]);
-            csv_export(of, t, res);
-        }
     } catch (const std::exception& err) {
         cerr << "CRITICAL " << err.what() << endl;
         std::exit(1);

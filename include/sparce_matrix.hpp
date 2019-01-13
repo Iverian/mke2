@@ -2,6 +2,7 @@
 #define MKE2_INCLUDE_SPARCE_MATRIX_HPP_
 
 #include <array>
+#include <iostream>
 #include <vector>
 
 #include "abstract_matrix.hpp"
@@ -10,6 +11,10 @@
 #include "vec.hpp"
 
 class DenseMatrix;
+class SparceMatrix;
+
+Vec solve_bcg(const SparceMatrix& lhs, const Vec& rhs, Vec x0,
+              const size_t max_iter = 10000);
 
 class SparceMatrix : public AbstractMatrix {
 public:
@@ -39,13 +44,7 @@ public:
     friend void dot(double* const result, const SparceMatrix& lhs,
                     const Vec& rhs);
 
-    friend Vec solve_cg(const SparceMatrix& lhs, const Vec& rhs, Vec x0,
-                        const size_t max_iter = 10000,
-                        const Tolerance tol = Tolerance::SINGLE);
-
-    friend Vec solve_bcg(const SparceMatrix& lhs, const Vec& rhs, Vec x0,
-                         const size_t max_iter = 10000,
-                         const Tolerance tol = Tolerance::SINGLE);
+    static SparceMatrix import(std::istream& is);
 
 protected:
     template <class Callable>

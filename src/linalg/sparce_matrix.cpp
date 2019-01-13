@@ -15,7 +15,7 @@ SparceMatrix::SparceMatrix()
     : data_()
     , indptr_(1)
     , indices_()
-    , shape_{0, 0}
+    , shape_ {0, 0}
 {
 }
 
@@ -146,6 +146,33 @@ const SparceMatrix::Value* SparceMatrix::find(Index i, Index j) const
     return result;
 }
 
+SparceMatrix SparceMatrix::import(istream& is)
+{
+    double val;
+    Index m = 0, n = 0;
+
+    is >> m >> n;
+    SparceMatrix result({m, n});
+
+    for (Index i = 0; i < m; ++i) {
+        for (Index j = 0; j < n; ++j) {
+            is >> val;
+            if (!isnear(val, 0)) {
+                result.data_.emplace_back(val);
+                result.indices_.emplace_back(j);
+                ++result.indptr_[i + 1];
+            }
+        }
+    }
+    result.data_.shrink_to_fit();
+    result.indices_.shrink_to_fit();
+    for (Index i = 0; i < m; ++i) {
+        result.indptr_[i + 1] += result.indptr_[i];
+    }
+
+    return result;
+}
+
 void dot(double* const result, const SparceMatrix& lhs, const Vec& rhs)
 {
     check_if(lhs.shape_.n == rhs.size(), "Incompatible shapes");
@@ -207,111 +234,17 @@ ostream& operator<<(ostream& os, const SparceMatrix& obj)
     return os;
 }
 
-Vec& admul_0(Vec& result, const Vec& x, const Vec& y, double c)
-{
-    ptrdiff_t i;
-    const ptrdiff_t n = ptrdiff_t(result.size());
-
-#pragma omp parallel shared(result, x, y, c)
-    {
-#pragma omp for private(i)
-        for (i = 0; i < n; ++i) {
-            result[i] = x[i] + c * y[i];
-        }
-    }
-    return result;
-}
-
-Vec& admul_1(Vec& result, const Vec& x, const Vec& y, const Vec& z, double c,
-             double d)
-{
-    ptrdiff_t i;
-    const ptrdiff_t n = ptrdiff_t(result.size());
-
-#pragma omp parallel shared(result, x, y, z, c, d)
-    {
-#pragma omp for private(i)
-        for (i = 0; i < n; ++i) {
-            result[i] = x[i] + c * (y[i] + d * z[i]);
-        }
-    }
-
-    return result;
-}
-
-double dist(const Vec& lhs, const Vec& rhs)
-{
-    double result = 0;
-    ptrdiff_t i;
-    const ptrdiff_t n = ptrdiff_t(lhs.size());
-
-#pragma omp parallel shared(lhs, rhs, result)
-    {
-        double u = 0;
-#pragma omp for private(i)
-        for (i = 0; i < n; ++i) {
-            u += sqr(lhs[i] - rhs[i]);
-        }
-#pragma omp flush(result)
-#pragma omp critical
-        result += u;
-    }
-
-    return sqrt(result);
-}
-
-Vec solve_cg(const SparceMatrix& lhs, const Vec& rhs, Vec x0,
-             const size_t max_iter, const Tolerance tol)
-{
-    check_if(rhs.size() == lhs.shape_.n, "Incompatible shapes");
-
-    size_t step = 0, m = lhs.shape_.m;
-
-    if (x0.empty()) {
-        x0.resize(m, 0);
-    }
-
-    auto rsqr = sqr(rhs);
-    auto r = rhs - lhs * x0;
-    auto z = r;
-    auto x = move(x0);
-
-    Vec p(m, 0.);
-    double eps, a, b, c, d;
-
-    bool success = false;
-    do {
-        dot(p.data(), lhs, z);
-        c = sqr(r);
-        a = c / dot(p, z);
-        admul_0(x, x, z, a);
-        admul_0(r, r, p, -a);
-        d = sqr(r);
-        if (eps = sqrt(d / rsqr); isnear(eps, 0, tol)) {
-            success = true;
-            break;
-        }
-
-        b = d / c;
-        admul_0(z, r, z, b);
-    } while (++step, step < max_iter);
-
-    if (success) {
-        cerrd << "Iteration converged: eps = " << eps << ", step = " << step
-              << endl;
-    } else {
-        cerrd << "Iteration did not converge: eps = " << eps << endl;
-    }
-
-    return x;
-}
+void admul_0(Vec& result, const Vec& x, const Vec& y, double c);
+void admul_1(Vec& result, const Vec& x, const Vec& y, const Vec& z, double c,
+             double d);
 
 Vec solve_bcg(const SparceMatrix& lhs, const Vec& rhs, Vec x0,
-              const size_t max_iter, const Tolerance tol)
+              const size_t max_iter)
 {
-    check_if(rhs.size() == lhs.shape_.n, "Incompatible shapes");
+    auto [m, n] = lhs.shape();
+    check_if(rhs.size() == n, "Incompatible shapes");
 
-    size_t step = 0, m = lhs.shape_.m;
+    size_t step = 0;
 
     if (x0.empty()) {
         x0.resize(m, 0);
@@ -326,51 +259,69 @@ Vec solve_bcg(const SparceMatrix& lhs, const Vec& rhs, Vec x0,
     Vec s(m, 0.);
     Vec t(m, 0.);
     Vec h(m, 0.);
-    double eps, up, b, uc = 1, a = 1, w = 1;
 
-    bool success = false;
+    double res = 0, u = 1, a = 1, w = 1;
     do {
-        up = uc;
-        uc = dot(z, r);
-
-        b = (uc / up) * (a / w);
+        auto up = u;
+        u = dot(z, r);
+        auto b = (u / up) * (a / w);
         // p = r + b * (p - w * v)
         admul_1(p, r, p, v, b, -w);
-
         // v = lhs * p
         dot(v.data(), lhs, p);
-        a = uc / dot(z, v);
-
+        a = u / dot(z, v);
         // h = x + a * p
         admul_0(h, x, p, a);
-        // if (dist(x, h) < tol) {
-        //     cdbg << "Exited at ??" << endl;
-        //     return h;
-        // }
-
         // s = r - a * v
         admul_0(s, r, v, -a);
-
         // t = lhs * s
         dot(t.data(), lhs, s);
         w = dot(t, s) / sqr(t);
         admul_0(x, h, s, w);
-
         // r = s - w * t
         admul_0(r, s, t, -w);
-
-        if (eps = sqrt(sqr(r) / rsqr); isnear(eps, 0, tol)) {
-            success = true;
+        auto resp = res;
+        res = sqrt(sqr(r) / rsqr);
+        if (isnear(resp, res, Tolerance::DOUBLE)) {
             break;
         }
-    } while (++step, step < max_iter);
+    } while (++step < max_iter);
 
-    if (success) {
-        cerrd << "Iteration converged: eps = " << eps << ", step = " << step
-              << endl;
+    if (isnear(res, 0, Tolerance::SINGLE)) {
+        cout << "Iteration converged: res = " << res << ", step = " << step
+             << endl;
     } else {
-        cerrd << "Iteration did not converge: eps = " << eps << endl;
+        cout << "Iteration did not converge: res = " << res << endl;
     }
 
     return x;
+}
+
+void admul_0(Vec& result, const Vec& x, const Vec& y, double c)
+{
+    ptrdiff_t i;
+    const ptrdiff_t n = ptrdiff_t(result.size());
+
+#pragma omp parallel shared(result, x, y, c)
+    {
+#pragma omp for private(i)
+        for (i = 0; i < n; ++i) {
+            result[i] = x[i] + c * y[i];
+        }
+    }
+}
+
+void admul_1(Vec& result, const Vec& x, const Vec& y, const Vec& z, double c,
+             double d)
+{
+    ptrdiff_t i;
+    const ptrdiff_t n = ptrdiff_t(result.size());
+
+#pragma omp parallel shared(result, x, y, z, c, d)
+    {
+#pragma omp for private(i)
+        for (i = 0; i < n; ++i) {
+            result[i] = x[i] + c * (y[i] + d * z[i]);
+        }
+    }
 }

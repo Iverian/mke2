@@ -3,9 +3,7 @@
 
 #include <array>
 
-static constexpr double tol[3] = {1e-1, 1e-5, 1e-7};
-
-enum class Tolerance { SINGLE = 1, DOUBLE = 2 };
+enum class Tolerance { ZERO = 0, SINGLE = 1, DOUBLE = 2, TRIPLE = 3 };
 
 bool isnear(double lhs, double rhs, Tolerance t = Tolerance::DOUBLE);
 double sqr(double x);
