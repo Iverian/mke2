@@ -70,7 +70,6 @@ GlobalEqBuilder& GlobalEqBuilder::get()
         auto r = g_->get_internal(t_.data(k));
         for (auto i = 0; i < 4; ++i) {
             auto p = k[i]->second;
-            auto fp = t_.on_first(k[i]);
 
             if (!t_.on_first(k[i])) {
                 for (auto j = 0; j < 4; ++j) {
