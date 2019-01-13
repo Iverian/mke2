@@ -27,6 +27,7 @@ public:
     friend Vec operator/(const Vec& lhs, double rhs);
 
     friend double dot(const Vec& lhs, const Vec& rhs);
+    friend double cdist(const Vec& lhs, const Vec& rhs);
     friend double sqr(const Vec& obj);
 };
 

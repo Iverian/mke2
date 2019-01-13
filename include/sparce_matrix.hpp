@@ -13,18 +13,13 @@
 class DenseMatrix;
 class SparceMatrix;
 
-Vec solve_bcg(const SparceMatrix& lhs, const Vec& rhs, Vec x0,
-              const size_t max_iter = 10000);
-
 class SparceMatrix : public AbstractMatrix {
 public:
     using DataContainer = std::vector<Value>;
     using IndexContainer = std::vector<Index>;
 
     SparceMatrix();
-    SparceMatrix(const Shape& shape,
-                 const DataContainer& vals = DataContainer());
-    SparceMatrix(const DenseMatrix& mat);
+    SparceMatrix(Index side, const DataContainer& vals = DataContainer());
 
     Index size() const override;
     Shape shape() const override;
@@ -39,12 +34,14 @@ public:
     Value* find(Index i, Index j);
     const Value* find(Index i, Index j) const;
 
-    friend std::ostream& operator<<(std::ostream& os, const SparceMatrix& obj);
     friend Vec operator*(const SparceMatrix& lhs, const Vec& rhs);
     friend void dot(double* const result, const SparceMatrix& lhs,
                     const Vec& rhs);
 
-    static SparceMatrix import(std::istream& is);
+    friend Vec solve(const SparceMatrix& lhs, const Vec& rhs, Vec x0);
+
+    friend void mdot_diag(Vec& result, const SparceMatrix& lhs,
+                          const Vec& rhs);
 
 protected:
     template <class Callable>
@@ -52,33 +49,40 @@ protected:
 
 private:
     DataContainer data_;
+    DataContainer diag_;
     IndexContainer indptr_;
     IndexContainer indices_;
-    Shape shape_;
+    Index nnz_;
+    Index m_;
 };
 
 template <class Callable>
 SparceMatrix::Value SparceMatrix::fetch_modify(Index i, Index j, Callable&& f)
 {
-    check_if(i < shape_.m && j < shape_.n, "Index out of range");
+    check_if(i < m_ && j < m_, "Index out of range");
 
     Value result = 0;
 
-    auto b = begin(indices_);
-    auto ifirst = b + indptr_[i];
-    auto ilast = b + indptr_[i + 1];
-    auto p = lower_bound(ifirst, ilast, j);
-    auto q = begin(data_) + Index(p - b);
+    if (i == j) {
+        result = diag_[i];
+        diag_[i] = f(diag_[i]);
+    } else {
+        auto b = begin(indices_);
+        auto ifirst = b + indptr_[i];
+        auto ilast = b + indptr_[i + 1];
+        auto p = lower_bound(ifirst, ilast, j);
+        auto q = begin(data_) + Index(p - b);
 
-    if (ifirst < ilast && p != end(indices_) && *p == j) {
-        result = *q;
-        *q = f(*q);
-    } else if (auto val = f(0); !isnear(val, 0)) {
-        indices_.emplace(p, j);
-        data_.emplace(q, val);
+        if (ifirst < ilast && p != end(indices_) && *p == j) {
+            result = *q;
+            *q = f(*q);
+        } else if (auto val = f(0); !isnear(val, 0)) {
+            indices_.emplace(p, j);
+            data_.emplace(q, val);
 
-        for (auto r = i; r < shape_.m; ++r) {
-            ++indptr_[r + 1];
+            for (auto r = i; r < m_; ++r) {
+                ++indptr_[r + 1];
+            }
         }
     }
 

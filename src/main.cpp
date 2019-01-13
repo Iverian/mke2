@@ -10,13 +10,13 @@
 #include <iostream>
 #include <memory>
 #include <stdexcept>
-#include <variant>
 
 using namespace std;
 
 static constexpr auto xdim = 200.;
 static constexpr auto ydim = 40.;
 static constexpr auto zdim = 40.;
+static constexpr size_t scale = 5;
 
 int main(int argc, char const* argv[])
 {
@@ -26,7 +26,7 @@ int main(int argc, char const* argv[])
             init = atof(argv[1]);
         }
 
-        auto t = Triangulation::cuboid({xdim, ydim, zdim}, 4);
+        auto t = Triangulation::cuboid({xdim, ydim, zdim}, scale);
         auto gen = make_shared<LocalEqV17>();
 
         GlobalEqBuilder build(t, gen);
@@ -35,7 +35,7 @@ int main(int argc, char const* argv[])
         auto start = chrono::high_resolution_clock::now();
 
         auto x0 = Vec(3 * t.nodes().size(), init);
-        auto res = solve_bcg(build.mat(), build.vec(), x0);
+        auto res = solve(build.mat(), build.vec(), move(x0));
 
         auto finish = chrono::high_resolution_clock::now();
         cout << "Iteration finished in "

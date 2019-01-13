@@ -9,7 +9,8 @@
 using namespace std;
 
 Triangulation::Triangulation(const array<double, 3>& dim)
-    : dim_(dim)
+    : size_(0)
+    , dim_(dim)
     , nodes_()
     , elems_()
     , first_()
@@ -49,9 +50,10 @@ const vector<Triangulation::SurfaceElement>& Triangulation::third() const
 
 Triangulation::NodePtr Triangulation::append_node(const Point3d& p)
 {
-    auto [it, flag] = nodes_.insert({p, nodes_.size()});
+    auto [it, flag] = nodes_.insert({p, size_});
     auto result = &(*it);
     if (flag) {
+        ++size_;
         auto first_flag = on_first(result);
         if (first_flag.on_sigma_1) {
             first_[0].push_back(result);
@@ -111,7 +113,7 @@ bool Triangulation::on_third(const SurfaceElement& e) const
 
 Triangulation::OnFirst Triangulation::on_first(const NodePtr& n) const
 {
-    OnFirst result{false, false};
+    OnFirst result {false, false};
 
     auto& p = n->first;
     // Sigma_1

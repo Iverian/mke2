@@ -43,18 +43,21 @@ Vec& Vec::operator/=(double rhs)
 
 bool operator==(const Vec& lhs, const Vec& rhs)
 {
-    auto result = lhs.size() == rhs.size();
-    if (result) {
-        const auto n = lhs.size();
-        double max = 0;
-        for (size_t i = 0; i < n; ++i) {
-            if (auto cur = fabs(rhs[i] - lhs[i]); cur > max) {
-                max = cur;
-            }
+    return isnear(cdist(lhs, rhs), 0);
+}
+
+double cdist(const Vec& lhs, const Vec& rhs)
+{
+    check_if(lhs.size() == rhs.size(), "Dimensions are not equal");
+
+    double cur, max = 0;
+    for (size_t i = 0; i < lhs.size(); ++i) {
+        cur = fabs(rhs[i] - lhs[i]);
+        if (cur > max) {
+            max = cur;
         }
-        result = isnear(max, 0);
     }
-    return result;
+    return max;
 }
 
 bool operator!=(const Vec& lhs, const Vec& rhs)

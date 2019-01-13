@@ -7,7 +7,7 @@ using namespace std;
 
 TEST(TestSparce, test_modify)
 {
-    SparceMatrix m({3, 3});
+    SparceMatrix m(3);
 
     m.fetch_add(0, 0, 1);
     m.fetch_add(0, 0, 2);
@@ -21,8 +21,6 @@ TEST(TestSparce, test_modify)
     m.fetch_add(2, 2, 3);
     m.clean_up();
 
-    coutd << m << endl;
-
     ASSERT_DOUBLE_EQ(m(0, 0), 0);
     ASSERT_DOUBLE_EQ(m(1, 0), 4);
     ASSERT_DOUBLE_EQ(m(1, 1), 2);
@@ -33,12 +31,12 @@ TEST(TestSparce, test_modify)
 
 TEST(TestSparce, test_solve)
 {
-    SparceMatrix m({5, 5}, {1, 0, 0, 0, 0, 0, 4, 0, 1, 3, 0, 0, 3,
-                            0, 0, 2, 1, 0, 3, 1, 1, 0, 0, 1, 0});
-    Vec x{1000, 2000, 100, 4000, 1};
-    Vec x0{0, 0, 0, 0, 0};
+    SparceMatrix m(5, {1, 0, 0, 2, 0, 0, 4, 0, 1, 0, 0, 0, 3,
+                       0, 0, 2, 1, 0, 3, 1, 0, 0, 0, 1, 1});
+    Vec x {1000, 2000, 100, 4000, 1};
+    Vec x0 {0, 0, 0, 0, 0};
     auto b = m * x;
-    auto x1 = solve_bcg(m, b, x0, 100);
+    auto x1 = solve(m, b, x0);
 
     ASSERT_EQ(x, x1);
 }

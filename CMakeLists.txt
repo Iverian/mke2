@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 project(mke2 VERSION 0.1.0 LANGUAGES CXX)
 
 set(ENABLE_TESTS "ON")
-set(ENABLE_OPENMP "ON")
+set(ENABLE_OPENMP "OFF")
 
 if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     set(LIBPROXY "mkeproxyd")
@@ -58,6 +58,8 @@ endif()
 if (CMAKE_CXX_COMPILER_ID STREQUAL MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /WX /analyze")
 endif()
+
+# add_subdirectory(gpu_solver)
 ###################################################
 
 ###################################################
@@ -91,6 +93,11 @@ target_include_directories(${LIBPROXY}
         ${CMAKE_CURRENT_SOURCE_DIR}/include
     PRIVATE
         "src"
+)
+
+target_link_libraries(${LIBPROXY}
+    PRIVATE
+        # gpu_lib
 )
 
 add_executable(${EXECUTABLE} ${MAIN_EXECUTABLE})

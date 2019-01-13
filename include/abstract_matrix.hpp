@@ -6,7 +6,7 @@
 class AbstractMatrix {
 public:
     using Value = double;
-    using Index = size_t;
+    using Index = int;
 
     struct Shape {
         Index m;

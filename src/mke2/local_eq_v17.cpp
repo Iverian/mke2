@@ -24,8 +24,8 @@ struct InternalProxy {
     DenseMatrix get_dq_mat() const
     {
         DenseMatrix mat({4, 4}, 1);
-        for (size_t i = 0; i < 3; ++i) {
-            for (size_t j = 0; j < 4; ++j) {
+        for (auto i = 0; i < 3; ++i) {
+            for (auto j = 0; j < 4; ++j) {
                 mat(i, j) = p[j][i];
             }
         }
@@ -35,7 +35,7 @@ struct InternalProxy {
                            r.solve({0, 0, 1, 0})};
 
         DenseMatrix result({6, 12});
-        for (size_t i = 0; i < 4; ++i) {
+        for (auto i = 0; i < 4; ++i) {
             auto j = 3 * i;
             result(0, j + 0) = f[0][i];
             result(1, j + 1) = f[1][i];
@@ -76,7 +76,7 @@ struct InternalProxy {
     LocalEqV17::Result get()
     {
         Vec g(12, 0.);
-        for (size_t i = 0; i < 4; ++i) {
+        for (auto i = 0; i < 4; ++i) {
             g[3 * i + 2] = -cnst::p;
         }
 
@@ -103,7 +103,7 @@ struct SurfaceProxy {
     DenseMatrix get_s_mat()
     {
         DenseMatrix result({3, 3}, 1);
-        for (size_t i = 0; i < 3; ++i) {
+        for (auto i = 0; i < 3; ++i) {
             result(i, i) = 2;
         }
         result *= 5 * cnst::mu / 120;

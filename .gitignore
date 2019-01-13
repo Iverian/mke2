@@ -36,5 +36,7 @@ out/
 data/
 build/
 scripts/
-.vscode
+gpu_solver/
+.vscode/
+
 *.mv2

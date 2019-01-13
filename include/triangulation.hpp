@@ -9,8 +9,8 @@
 
 class Triangulation {
 public:
-    static constexpr size_t N = 4;
-    static constexpr size_t SN = 3;
+    static constexpr AbstractMatrix::Index N = 4;
+    static constexpr AbstractMatrix::Index SN = 3;
 
     struct OnFirst {
         bool on_sigma_1;
@@ -22,7 +22,7 @@ public:
         }
     };
 
-    using Index = size_t;
+    using Index = AbstractMatrix::Index;
     using NodeContainer = std::unordered_map<Point3d, Index>;
     using NodePtr = NodeContainer::const_pointer;
     using FiniteElement = std::array<NodePtr, N>;
@@ -58,6 +58,7 @@ public:
 private:
     std::array<double, 3> dim_;
 
+    Index size_;
     NodeContainer nodes_;
     std::vector<FiniteElement> elems_;
     std::vector<SurfaceElement> triangles_;
@@ -74,7 +75,7 @@ struct hash<array<Triangulation::NodePtr, N>> {
     size_t operator()(const argument_type& key) const
     {
         size_t result = seed;
-        for (size_t i = 0; i < N; ++i) {
+        for (auto i = 0; i < N; ++i) {
             result = (result << 1) ^ h(key[i]);
         }
         return result;

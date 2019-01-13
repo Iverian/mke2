@@ -9,8 +9,7 @@
 
 class GlobalEqBuilder {
 public:
-    using Index = size_t;
-    using View = std::tuple<double&, double&, double&>;
+    using Index = AbstractMatrix::Index;
 
     explicit GlobalEqBuilder(const Triangulation& triang,
                              std::shared_ptr<AbstractLocalEq> gen);
