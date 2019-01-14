@@ -43,9 +43,9 @@ public:
     std::vector<NodePtr> append_nodes(const std::vector<Point3d>& vp);
     void append_elem(const FiniteElement& e);
 
-    FiniteElementData data(const FiniteElement& e) const;
-    SurfaceElementData data(const SurfaceElement& e) const;
-    SurfaceElement face(const FiniteElement& e, Index i) const;
+    static FiniteElementData data(const FiniteElement& e);
+    static SurfaceElementData data(const SurfaceElement& e);
+    static SurfaceElement face(const FiniteElement& e, Index i);
 
     bool is_boundary(const SurfaceElement& e) const;
     void extract_triangles();

@@ -101,7 +101,7 @@ struct SurfaceProxy {
         for (auto i = 0; i < 3; ++i) {
             result(i, i) = 2;
         }
-        result *= 5 * cnst::mu / 120;
+        // result *= 5 * cnst::mu / 120;
         result = kroneker_product(result, DenseMatrix::eye(3));
         return result;
     }
@@ -113,7 +113,7 @@ struct SurfaceProxy {
             t[i * 3 + 2] = -cnst::p;
         }
 
-        return {v * s, v * s * t};
+        return {v * s * (5 * cnst::mu / 120), v * s * t / 24};
     }
 
 private:

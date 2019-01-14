@@ -168,7 +168,7 @@ double cdist(const Vec& lhs, const Vec& rhs);
 
 Vec solve(const SparceMatrix& lhs, const Vec& rhs, Vec x0)
 {
-    static constexpr size_t max_iter = 100000;
+    static constexpr size_t max_iter = 1000000;
 
     auto [m, n] = lhs.shape();
     check_if(rhs.size() == n, "Incompatible shapes");
@@ -222,7 +222,7 @@ Vec solve(const SparceMatrix& lhs, const Vec& rhs, Vec x0)
         }
     } while (++step < max_iter);
 
-    res = cdist(lhs * x, rhs);
+    res = sqrt(sqr(lhs * x - rhs));
     if (isnear(res, 0, Tolerance::DOUBLE)) {
         cout << "Iteration converged: res = " << res << ", step = " << step
              << endl;

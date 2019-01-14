@@ -87,20 +87,18 @@ void Triangulation::append_elem(const FiniteElement& e)
     }
 }
 
-Triangulation::FiniteElementData
-Triangulation::data(const FiniteElement& e) const
+Triangulation::FiniteElementData Triangulation::data(const FiniteElement& e)
 {
     return {e[0]->first, e[1]->first, e[2]->first, e[3]->first};
 }
 
-Triangulation::SurfaceElementData
-Triangulation::data(const SurfaceElement& e) const
+Triangulation::SurfaceElementData Triangulation::data(const SurfaceElement& e)
 {
     return {e[0]->first, e[1]->first, e[2]->first};
 }
 
 Triangulation::SurfaceElement Triangulation::face(const FiniteElement& e,
-                                                  Index i) const
+                                                  Index i)
 {
     return {e[(i + 1) % N], e[(i + 2) % N], e[(i + 3) % N]};
 }
