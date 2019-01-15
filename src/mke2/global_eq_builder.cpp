@@ -76,24 +76,27 @@ pair<SparceMatrix, Vec> build_global_system(const Triangulation& t,
 
         for (Index i = 0; i < Triangulation::N; ++i) {
             auto gi = t.get_index(k[i]);
+            auto ci = t.on_first(k[i]);
 
-            if (!t.on_first(k[i])) {
-                for (Index j = 0; j < Triangulation::N; ++j) {
-                    auto gj = t.get_index(k[j]);
+            for (Index j = 0; j < Triangulation::N; ++j) {
+                auto gj = t.get_index(k[j]);
+                auto cj = t.on_first(k[j]);
 
-                    if (!t.on_first(k[j])) {
-                        for (Index p = 0; p < Triangulation::DIM; ++p) {
-                            for (Index q = 0; q < Triangulation::DIM; ++q) {
-                                auto v = r.first(_v(i, p), _v(j, q));
-                                mat.add(_g(gi, p, m), _g(gj, q, m), v);
-                            }
-                        }
-                    } else {
-                        for (Index p = 0; p < Triangulation::DIM; ++p) {
-                            for (Index q = 0; q < Triangulation::DIM; ++q) {
-                                vec[_g(gi, p, m)]
-                                    -= r.first(_v(i, p), _v(j, q))
-                                    * vec[_g(gj, q, m)];
+                for (Index p = 0; p < Triangulation::DIM; ++p) {
+                    for (Index q = 0; q < Triangulation::DIM; ++q) {
+                        auto cip = t.coord_on_first(ci, p);
+                        auto cjq = t.coord_on_first(cj, q);
+
+                        auto gip = _g(gi, p, m);
+                        auto gjq = _g(gj, q, m);
+
+                        auto val = r.first(_v(i, p), _v(j, q));
+
+                        if (!cip) {
+                            if (!cjq) {
+                                mat.add(gip, gjq, val);
+                            } else {
+                                vec[gip] -= val * vec[gjq];
                             }
                         }
                     }
@@ -148,24 +151,27 @@ pair<SparceMatrix, Vec> build_global_system(const Triangulation& t,
 
         for (Index i = 0; i < Triangulation::N; ++i) {
             auto gi = t.get_index(k[i]);
+            auto ci = t.on_first(k[i]);
 
-            if (!t.on_first(k[i])) {
-                for (Index j = 0; j < Triangulation::N; ++j) {
-                    auto gj = t.get_index(k[j]);
+            for (Index j = 0; j < Triangulation::N; ++j) {
+                auto gj = t.get_index(k[j]);
+                auto cj = t.on_first(k[j]);
 
-                    if (!t.on_first(k[j])) {
-                        for (Index p = 0; p < Triangulation::DIM; ++p) {
-                            for (Index q = 0; q < Triangulation::DIM; ++q) {
-                                mat.add(_g(gi, p, m), _g(gj, q, m),
-                                        r.first(_v(i, p), _v(j, q)));
-                            }
-                        }
-                    } else {
-                        for (Index p = 0; p < Triangulation::DIM; ++p) {
-                            for (Index q = 0; q < Triangulation::DIM; ++q) {
-                                vec[_g(gi, p, m)]
-                                    -= r.first(_v(i, p), _v(j, q))
-                                    * vec[_g(gj, q, m)];
+                for (Index p = 0; p < Triangulation::DIM; ++p) {
+                    for (Index q = 0; q < Triangulation::DIM; ++q) {
+                        auto cip = t.coord_on_first(ci, p);
+                        auto cjq = t.coord_on_first(cj, q);
+
+                        auto gip = _g(gi, p, m);
+                        auto gjq = _g(gj, q, m);
+
+                        auto val = r.first(_v(i, p), _v(j, q));
+
+                        if (!cip) {
+                            if (!cjq) {
+                                mat.add(gip, gjq, val);
+                            } else {
+                                vec[gip] -= val * vec[gjq];
                             }
                         }
                     }
@@ -177,6 +183,29 @@ pair<SparceMatrix, Vec> build_global_system(const Triangulation& t,
     mat.remove_zeroes();
     return {mat, vec};
 }
+
+// if (!t.on_first(k[i])) {
+//     for (Index j = 0; j < Triangulation::N; ++j) {
+//         auto gj = t.get_index(k[j]);
+
+//         if (!t.on_first(k[j])) {
+//             for (Index p = 0; p < Triangulation::DIM; ++p) {
+//                 for (Index q = 0; q < Triangulation::DIM; ++q) {
+//                     auto v = r.first(_v(i, p), _v(j, q));
+//                     mat.add(_g(gi, p, m), _g(gj, q, m), v);
+//                 }
+//             }
+//         } else {
+//             for (Index p = 0; p < Triangulation::DIM; ++p) {
+//                 for (Index q = 0; q < Triangulation::DIM; ++q) {
+//                     vec[_g(gi, p, m)]
+//                         -= r.first(_v(i, p), _v(j, q))
+//                         * vec[_g(gj, q, m)];
+//                 }
+//             }
+//         }
+//     }
+// }
 
 // GlobalEqBuilder::GlobalEqBuilder(const Triangulation& triang,
 //                                  shared_ptr<AbstractLocalEq> gen)
