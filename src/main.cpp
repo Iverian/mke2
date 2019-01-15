@@ -16,7 +16,7 @@ using namespace std;
 static constexpr auto xdim = 200.;
 static constexpr auto ydim = 40.;
 static constexpr auto zdim = 40.;
-static constexpr size_t scale = 5;
+static constexpr size_t scale = 4;
 
 int main(int argc, char const* argv[])
 {
@@ -27,15 +27,14 @@ int main(int argc, char const* argv[])
         }
 
         auto t = Triangulation::cuboid({xdim, ydim, zdim}, scale);
-        auto gen = make_shared<LocalEqV17>();
 
-        GlobalEqBuilder build(t, gen);
-        build.get();
+        LocalEqV17 gen;
+        auto glob = build_global_system(t, gen);
 
         auto start = chrono::high_resolution_clock::now();
 
-        auto x0 = Vec(3 * t.nodes().size(), init);
-        auto res = solve(build.mat(), build.vec(), move(x0));
+        auto x0 = Vec(glob.second.size(), init);
+        auto res = solve(glob.first, glob.second, move(x0));
 
         auto finish = chrono::high_resolution_clock::now();
         cout << "Iteration finished in "

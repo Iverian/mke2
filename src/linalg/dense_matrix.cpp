@@ -8,7 +8,7 @@ using namespace std;
 
 DenseMatrix::DenseMatrix()
     : Super()
-    , shape_{0, 0}
+    , shape_ {0, 0}
 {
 }
 
@@ -52,19 +52,25 @@ const DenseMatrix::Super& DenseMatrix::data() const
 
 #define _(i, j) ((*this)[(shape_.n) * (i) + (j)])
 
-DenseMatrix::Value& DenseMatrix::operator()(Index i, Index j) noexcept
+DenseMatrix::Value& DenseMatrix::operator()(Index i, Index j)
 {
+    check_if(i < shape_.m && j < shape_.n, "Index out of range");
+
     return _(i, j);
 }
 
 const DenseMatrix::Value& DenseMatrix::operator()(Index i, Index j) const
-    noexcept
+
 {
+    check_if(i < shape_.m && j < shape_.n, "Index out of range");
+
     return _(i, j);
 }
 
 DenseMatrix& DenseMatrix::swap_rows(Index i, Index j)
 {
+    check_if(i < shape_.m && j < shape_.m, "Index out of range");
+
     for (Index k = 0; k < shape_.n; ++k) {
         ::swap(_(i, k), _(j, k));
     }
@@ -73,6 +79,8 @@ DenseMatrix& DenseMatrix::swap_rows(Index i, Index j)
 
 DenseMatrix& DenseMatrix::swap_columns(Index i, Index j)
 {
+    check_if(i < shape_.n && j < shape_.n, "Index out of range");
+
     for (Index k = 0; k < shape_.m; ++k) {
         ::swap(_(k, i), _(k, j));
     }
@@ -81,7 +89,7 @@ DenseMatrix& DenseMatrix::swap_columns(Index i, Index j)
 
 DenseMatrix& DenseMatrix::append_row(const Vec& v)
 {
-    check_if(v.size() == shape_.n, "некорректный размер");
+    check_if(v.size() == shape_.n, "Incompatible shapes");
 
     resize(size() + shape_.n);
     for (Index j = 0; j < shape_.n; ++j) {
@@ -94,7 +102,7 @@ DenseMatrix& DenseMatrix::append_row(const Vec& v)
 
 DenseMatrix& DenseMatrix::append_column(const Vec& v)
 {
-    check_if(v.size() == shape_.m, "некорректный размер");
+    check_if(v.size() == shape_.m, "Incompatible shapes");
 
     reserve(size() + shape_.m);
     auto pos = begin() + shape_.n;
@@ -118,7 +126,8 @@ DenseMatrix DenseMatrix::transpose() const
 
 DenseMatrix& DenseMatrix::operator+=(const DenseMatrix& rhs)
 {
-    check_if(shape_ == rhs.shape_, "Формы матриц не совпадают");
+    check_if(shape_ == rhs.shape_, "Incompatible shapes");
+
     for (Index i = 0; i < size(); ++i) {
         (*this)[i] += rhs[i];
     }
@@ -127,7 +136,8 @@ DenseMatrix& DenseMatrix::operator+=(const DenseMatrix& rhs)
 
 DenseMatrix& DenseMatrix::operator-=(const DenseMatrix& rhs)
 {
-    check_if(shape_ == rhs.shape_, "Формы матриц не совпадают");
+    check_if(shape_ == rhs.shape_, "Incompatible shapes");
+
     for (Index i = 0; i < size(); ++i) {
         (*this)[i] -= rhs[i];
     }
@@ -199,7 +209,7 @@ DenseMatrix operator-(const DenseMatrix& lhs, const DenseMatrix& rhs)
 
 DenseMatrix operator*(const DenseMatrix& lhs, const DenseMatrix& rhs)
 {
-    check_if(lhs.shape_.n == rhs.shape_.m, "Несовместимые размеры матриц");
+    check_if(lhs.shape_.n == rhs.shape_.m, "Incompatible shapes");
 
     DenseMatrix result({lhs.shape_.m, rhs.shape_.n});
     DenseMatrix::Index i, j, k;
@@ -233,6 +243,8 @@ DenseMatrix operator/(const DenseMatrix& lhs, DenseMatrix::Value rhs)
 
 Vec operator*(const DenseMatrix& lhs, const Vec& rhs)
 {
+    check_if(lhs.shape_.n == rhs.size(), "Incompatible shapes");
+
     Vec result(lhs.shape_.m, 0.);
     for (DenseMatrix::Index i = 0; i < lhs.shape_.m; ++i) {
         for (DenseMatrix::Index j = 0; j < lhs.shape_.n; ++j) {
@@ -244,6 +256,8 @@ Vec operator*(const DenseMatrix& lhs, const Vec& rhs)
 
 Vec operator*(const Vec& lhs, const DenseMatrix& rhs)
 {
+    check_if(lhs.size() == rhs.shape_.m, "Incompatible shapes");
+
     Vec result(rhs.shape_.n, 0.);
     for (DenseMatrix::Index i = 0; i < rhs.shape_.m; ++i) {
         auto v = lhs[i];
@@ -276,7 +290,7 @@ DenseMatrix kroneker_product(const DenseMatrix& lhs, const DenseMatrix& rhs)
 DenseMatrix DenseMatrix::eye(Index dim)
 {
     DenseMatrix result({dim, dim});
-    for (DenseMatrix::Index i = 0; i < dim; ++i) {
+    for (Index i = 0; i < dim; ++i) {
         result(i, i) = 1.;
     }
     return result;

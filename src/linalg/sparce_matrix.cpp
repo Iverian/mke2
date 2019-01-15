@@ -74,40 +74,77 @@ SparceMatrix::Index SparceMatrix::non_zero() const
     return nnz_;
 }
 
-SparceMatrix::Value SparceMatrix::operator()(Index i, Index j) const
+const SparceMatrix::DataContainer& SparceMatrix::data() const noexcept
 {
-    auto ptr = find(i, j);
-    return (ptr != nullptr) ? *ptr : 0;
+    return data_;
 }
 
-SparceMatrix::Value SparceMatrix::fetch_add(Index i, Index j, Value val)
+const SparceMatrix::DataContainer& SparceMatrix::diag() const noexcept
+{
+    return diag_;
+}
+
+const SparceMatrix::IndexContainer& SparceMatrix::indptr() const noexcept
+{
+    return indptr_;
+}
+
+const SparceMatrix::IndexContainer& SparceMatrix::indices() const noexcept
+{
+    return indices_;
+}
+
+SparceMatrix::Value SparceMatrix::operator()(Index i, Index j) const
+{
+    check_if(i < m_ && j < m_, "Index out of range");
+
+    Value result = 0;
+    if (i == j) {
+        result = diag_[i];
+    } else {
+        auto b = begin(indices_);
+        auto ifirst = b + indptr_[i];
+        auto ilast = b + indptr_[i + 1];
+        if (ifirst < ilast) {
+            auto p = lower_bound(ifirst, ilast, j);
+            if (p != ilast && *p == j) {
+                result = data_[Index(p - b)];
+            }
+        }
+    }
+
+    return result;
+}
+
+SparceMatrix::Value SparceMatrix::add(Index i, Index j, Value val)
 {
     return fetch_modify(i, j, [&val](auto x) { return x + val; });
 }
 
-SparceMatrix::Value SparceMatrix::fetch_sub(Index i, Index j, Value val)
+SparceMatrix::Value SparceMatrix::sub(Index i, Index j, Value val)
 {
     return fetch_modify(i, j, [&val](auto x) { return x - val; });
 }
 
-SparceMatrix::Value SparceMatrix::fetch_set(Index i, Index j, Value val)
+SparceMatrix::Value SparceMatrix::set(Index i, Index j, Value val)
 {
     return fetch_modify(i, j, [&val](auto) { return val; });
 }
 
-void SparceMatrix::clean_up()
+void SparceMatrix::remove_zeroes()
 {
     DataContainer new_data;
     IndexContainer new_indptr(m_ + 1, 0);
     IndexContainer new_indices;
 
-    Index pos = 0;
     for (Index i = 0; i < m_; ++i) {
-        for (; pos < indptr_[i + 1]; ++pos) {
-            auto& v = data_[pos];
+        auto k = indptr_[i];
+        auto last = indptr_[i + 1];
+        for (; k < last; ++k) {
+            auto v = data_[k];
             if (!isnear(v, 0)) {
                 new_data.emplace_back(v);
-                new_indices.emplace_back(indices_[pos]);
+                new_indices.emplace_back(indices_[k]);
                 ++new_indptr[i + 1];
             } else {
                 --nnz_;
@@ -126,38 +163,10 @@ void SparceMatrix::clean_up()
     indices_ = move(new_indices);
 }
 
-SparceMatrix::Value* SparceMatrix::find(Index i, Index j)
-{
-    auto result = const_cast<const SparceMatrix*>(this)->find(i, j);
-    return const_cast<Value*>(result);
-}
-
-const SparceMatrix::Value* SparceMatrix::find(Index i, Index j) const
-{
-    check_if(i < m_ && j < m_, "Index out of range");
-
-    const Value* result = nullptr;
-    if (i == j) {
-        result = &diag_[i];
-    } else {
-        auto b = begin(indices_);
-        auto ifirst = b + indptr_[i];
-        auto ilast = b + indptr_[i + 1];
-        if (ifirst < ilast) {
-            auto p = lower_bound(ifirst, ilast, j);
-            if (p != end(indices_) && *p == j) {
-                result = &data_[Index(p - b)];
-            }
-        }
-    }
-
-    return result;
-}
-
 Vec operator*(const SparceMatrix& lhs, const Vec& rhs)
 {
     Vec result(lhs.m_, 0.);
-    dot(result.data(), lhs, rhs);
+    dot(result, lhs, rhs);
     return result;
 }
 
@@ -168,7 +177,7 @@ double cdist(const Vec& lhs, const Vec& rhs);
 
 Vec solve(const SparceMatrix& lhs, const Vec& rhs, Vec x0)
 {
-    static constexpr size_t max_iter = 1000000;
+    static constexpr size_t max_iter = 100000;
 
     auto [m, n] = lhs.shape();
     check_if(rhs.size() == n, "Incompatible shapes");
@@ -192,23 +201,23 @@ Vec solve(const SparceMatrix& lhs, const Vec& rhs, Vec x0)
     Vec q(m, 0.);
     Vec p(m, 0.);
 
-    double dst = 0, res = 0, u = 1, a = 1, w = 1, b = 0;
+    double res = 0, u = 1, a = 1, w = 1, b = 0;
     do {
         auto up = u;
         u = dot(r0, r);
 
-        auto b = (u / up) * (a / w);
+        b = (u / up) * (a / w);
         // p = r + b * (p - w * v)
         cax_by_z(p, b, p, -w * b, v, r);
         // v = lhs * p
-        dot(v.data(), lhs, p);
+        dot(v, lhs, p);
 
         a = u / dot(r0, v);
 
         // s = r - a * v
         cax_y(s, -a, v, r);
         // t = lhs * s
-        dot(t.data(), lhs, s);
+        dot(t, lhs, s);
         w = dot(t, s) / sqr(t);
 
         // x = a * p + w * s + x
@@ -222,14 +231,14 @@ Vec solve(const SparceMatrix& lhs, const Vec& rhs, Vec x0)
         }
     } while (++step < max_iter);
 
-    res = sqrt(sqr(lhs * x - rhs));
-    if (isnear(res, 0, Tolerance::DOUBLE)) {
-        cout << "Iteration converged: res = " << res << ", step = " << step
-             << endl;
+    auto diff = sqrt(sqr(lhs * x - rhs));
+    if (step != max_iter) {
+        cout << "Iteration converged";
     } else {
-        cout << "Iteration did not converge: res = " << res
-             << ", step = " << step << endl;
+        cout << "Iteration did not converge";
     }
+    cout << ": res=" << res << ", |Ax - b|=" << diff << ", step=" << step
+         << endl;
 
     return x;
 }
@@ -265,7 +274,7 @@ Vec solve_p(const SparceMatrix& lhs, const Vec& rhs, Vec x0)
     mdot_diag(z, lhs, r);
     auto p = z;
 
-    double dst = 0, res = 0, u = 1, a = 1, w = 1, b = 0;
+    double res = 0, u = 1, a = 1, w = 1, b = 0;
     do {
         auto up = u;
         u = dot(r0, r);
@@ -276,7 +285,7 @@ Vec solve_p(const SparceMatrix& lhs, const Vec& rhs, Vec x0)
         // y = diag(lhs)^{-1} * p
         mdot_diag(y, lhs, p);
         // v = lhs * y
-        dot(v.data(), lhs, y);
+        dot(v, lhs, y);
 
         a = u / dot(r0, v);
 
@@ -285,7 +294,7 @@ Vec solve_p(const SparceMatrix& lhs, const Vec& rhs, Vec x0)
         // z = diag(lhs)^{-1} * s
         mdot_diag(z, lhs, s);
         // t = lhs * s
-        dot(t.data(), lhs, z);
+        dot(t, lhs, z);
         // q = diag(lhs)^{-1} * t
         mdot_diag(q, lhs, t);
         w = dot(z, q) / sqr(q);
@@ -320,84 +329,71 @@ void mdot_diag(Vec& result, const SparceMatrix& lhs, const Vec& rhs)
     }
 }
 
-void dot(double* const result, const SparceMatrix& lhs, const Vec& rhs)
+void dot(Vec& result, const SparceMatrix& lhs, const Vec& rhs)
 {
     check_if(lhs.m_ == rhs.size(), "Incompatible shapes");
 
-    ptrdiff_t i;
-    const ptrdiff_t m = ptrdiff_t(lhs.m_);
+    SparceMatrix::Index i, m = lhs.m_;
     size_t ifirst, ilast, k;
     double u;
 
-#pragma omp parallel shared(result, lhs, rhs, m)
-    {
-#pragma omp for private(i, k, u, ifirst, ilast)
-        for (i = 0; i < m; ++i) {
-            u = lhs.diag_[i] * rhs[i];
-            ifirst = lhs.indptr_[i];
-            ilast = lhs.indptr_[i + 1];
-            if (ifirst < ilast) {
-                for (k = ifirst; k < ilast; ++k) {
-                    u += lhs.data_[k] * rhs[lhs.indices_[k]];
-                }
+    for (i = 0; i < m; ++i) {
+        u = lhs.diag_[i] * rhs[i];
+        ifirst = lhs.indptr_[i];
+        ilast = lhs.indptr_[i + 1];
+        if (ifirst < ilast) {
+            for (k = ifirst; k < ilast; ++k) {
+                u += lhs.data_[k] * rhs[lhs.indices_[k]];
             }
-            result[i] = u;
         }
+        result[i] = u;
     }
 }
 
 void cax_y(Vec& res, double a, const Vec& x, const Vec& y)
 {
-    int i;
-    const int n = int(res.size());
+    SparceMatrix::Index i, n = res.size();
 
-#pragma omp parallel shared(res, a, x, y, n)
-    {
-#pragma omp for private(i)
-        for (i = 0; i < n; ++i) {
-            res[i] = a * x[i] + y[i];
-        }
+    for (i = 0; i < n; ++i) {
+        res[i] = a * x[i] + y[i];
     }
 }
 
 void cax_by_z(Vec& res, double a, const Vec& x, double b, const Vec& y,
               const Vec& z)
 {
-    int i;
-    const int n = int(res.size());
+    SparceMatrix::Index i, n = res.size();
 
-#pragma omp parallel shared(res, a, x, b, y, z, n)
-    {
-#pragma omp for private(i)
-        for (i = 0; i < n; ++i) {
-            res[i] = a * x[i] + b * y[i] + z[i];
-        }
+    for (i = 0; i < n; ++i) {
+        res[i] = a * x[i] + b * y[i] + z[i];
     }
 }
 
-// ostream& operator<<(ostream& os, const SparceMatrix& obj)
-// {
-//     auto p = obj.indptr_.size() - 1;
-//     auto m = obj.shape_.m;
-//     SparceMatrix::Index i, j;
+ostream& operator<<(ostream& os, const SparceMatrix& obj)
+{
+    auto m = obj.m_;
+    SparceMatrix::Index i, j;
 
-//     os << "{\"shape\": " << obj.shape_ << ", \"data\": [";
-//     for (i = 0; i < p; ++i) {
-//         auto pos = obj.indptr_[i];
-//         auto end = obj.indptr_[i + 1];
+    os << "{\"shape\": " << obj.shape() << ", \"data\": [";
+    for (i = 0; i < m; ++i) {
+        auto pos = obj.indptr_[i];
+        auto end = obj.indptr_[i + 1];
 
-//         os << "[";
-//         for (j = 0; j < m; ++j) {
-//             if (pos < end && obj.indices_[pos] == j) {
-//                 os << obj.data_[pos++];
-//             } else {
-//                 os << 0;
-//             }
-//             os << (j + 1 != m ? ", " : "]");
-//         }
-//         os << (i + 1 != p ? ", " : "]");
-//     }
-//     os << "}";
+        os << "[";
+        for (j = 0; j < m; ++j) {
+            if (i == j) {
+                os << obj.diag_[i];
+            }
+            if (pos < end && obj.indices_[pos] == j) {
+                os << obj.data_[pos++];
+            } else {
+                os << 0;
+            }
+            os << (j + 1 != m ? ", " : "]");
+        }
+        os << (i + 1 != m ? ", " : "]");
+    }
+    os << "}";
 
-//     return os;
-// }
+    return os;
+}

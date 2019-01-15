@@ -9,8 +9,9 @@
 
 class Triangulation {
 public:
-    static constexpr AbstractMatrix::Index N = 4;
-    static constexpr AbstractMatrix::Index SN = 3;
+    static constexpr AbstractMatrix::Index DIM = 3;
+    static constexpr AbstractMatrix::Index N = DIM + 1;
+    static constexpr AbstractMatrix::Index SN = DIM;
 
     struct OnFirst {
         bool on_sigma_1;
@@ -30,9 +31,9 @@ public:
     using FiniteElementData = std::array<Point3d, N>;
     using SurfaceElementData = std::array<Point3d, SN>;
 
-    explicit Triangulation(const std::array<double, 3>& dim);
+    explicit Triangulation(const std::array<double, DIM>& dim);
 
-    const std::array<double, 3>& dim() const;
+    const std::array<double, DIM>& dim() const;
     const NodeContainer& nodes() const;
     const std::vector<SurfaceElement>& triangles() const;
     const std::vector<FiniteElement>& elems() const;
@@ -43,6 +44,7 @@ public:
     std::vector<NodePtr> append_nodes(const std::vector<Point3d>& vp);
     void append_elem(const FiniteElement& e);
 
+    static Index get_index(const NodePtr& ptr);
     static FiniteElementData data(const FiniteElement& e);
     static SurfaceElementData data(const SurfaceElement& e);
     static SurfaceElement face(const FiniteElement& e, Index i);
@@ -53,10 +55,10 @@ public:
     bool on_third(const SurfaceElement& e) const;
     OnFirst on_first(const NodePtr& n) const;
 
-    static Triangulation cuboid(std::array<double, 3> dim, size_t scale);
+    static Triangulation cuboid(std::array<double, DIM> dim, size_t scale);
 
 private:
-    std::array<double, 3> dim_;
+    std::array<double, DIM> dim_;
 
     Index size_;
     NodeContainer nodes_;

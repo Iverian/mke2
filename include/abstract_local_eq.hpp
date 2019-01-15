@@ -19,4 +19,7 @@ public:
     get_boundary(Triangulation::SurfaceElementData elem) const = 0;
 };
 
+using LocalEqGen = std::function<std::pair<DenseMatrix, Vec>(
+    const Triangulation&, const Triangulation::FiniteElement&)>;
+
 #endif // MKE2_INCLUDE_ABSTRACT_LOCAL_EQ_HPP_

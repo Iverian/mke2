@@ -34,8 +34,8 @@ public:
 
     Index size() const override;
     Shape shape() const override;
-    Value& operator()(Index i, Index j) noexcept;
-    const Value& operator()(Index i, Index j) const noexcept;
+    Value& operator()(Index i, Index j);
+    const Value& operator()(Index i, Index j) const;
 
     Super& data();
     const Super& data() const;

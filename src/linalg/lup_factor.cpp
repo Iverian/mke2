@@ -23,8 +23,7 @@ LupFactor::LupFactor(DenseMatrix&& in)
 LupFactor& LupFactor::factor()
 {
     auto s = mat_.shape();
-    check_if(s.m == s.n,
-             "Не могу посчитать LUP разложение неквадратной матрицы");
+    check_if(s.m == s.n, "Matrix is not square");
 
     m_ = s.m;
     pivot_ = PivotType(m_ + 1);
@@ -42,7 +41,7 @@ LupFactor& LupFactor::factor()
                 imax = k;
             }
 
-        check_if(!isnear(mmax, 0), "Не могу разложить вырожденную матрицу");
+        check_if(!isnear(mmax, 0), "Matrix is not inverible");
 
         if (imax != i) {
             swap(pivot_[i], pivot_[imax]);

@@ -1,32 +1,110 @@
 #include <gtest/gtest.h>
 
 #include <debug.hpp>
+#include <dense_matrix.hpp>
 #include <sparce_matrix.hpp>
+
+#include <chrono>
+#include <random>
 
 using namespace std;
 
+static constexpr AbstractMatrix::Index N = 100;
+
 TEST(TestSparce, test_modify)
 {
-    SparceMatrix m(3);
+    SparceMatrix a(N);
+    DenseMatrix b({N, N}, 0);
 
-    m.fetch_add(0, 0, 1);
-    m.fetch_add(0, 0, 2);
-    m.fetch_sub(0, 0, 3);
+    default_random_engine eng;
+    uniform_real_distribution<double> dr;
+    uniform_int_distribution<AbstractMatrix::Index> di(0, N - 1);
 
-    m.fetch_add(1, 0, 4);
-    m.fetch_add(1, 1, 2);
-    m.fetch_add(1, 2, 5);
+    auto seed = default_random_engine::result_type(
+        chrono::system_clock::now().time_since_epoch().count() % 1000000);
+    eng.seed(seed);
 
-    m.fetch_set(2, 0, 0);
-    m.fetch_add(2, 2, 3);
-    m.clean_up();
+    for (auto count = 0; count < 30; ++count) {
+        auto value = dr(eng);
+        auto i = di(eng);
+        auto j = di(eng);
 
-    ASSERT_DOUBLE_EQ(m(0, 0), 0);
-    ASSERT_DOUBLE_EQ(m(1, 0), 4);
-    ASSERT_DOUBLE_EQ(m(1, 1), 2);
-    ASSERT_DOUBLE_EQ(m(1, 2), 5);
-    ASSERT_DOUBLE_EQ(m(2, 0), 0);
-    ASSERT_DOUBLE_EQ(m(2, 2), 3);
+        if (eng() % 2) {
+            a.add(i, j, value);
+            b(i, j) += value;
+        } else {
+            a.sub(i, j, value);
+            b(i, j) -= value;
+        }
+    }
+    a.remove_zeroes();
+
+    for (AbstractMatrix::Index i = 0; i < N; ++i) {
+        for (AbstractMatrix::Index j = 0; j < N; ++j) {
+            if (!isnear(a(i, j), b(i, j))) {
+                coutd << "seed=" << seed << ", i=" << i << ", j=" << j << endl;
+            }
+            ASSERT_DOUBLE_EQ(a(i, j), b(i, j));
+        }
+    }
+
+    SUCCEED();
+}
+
+TEST(TestSparce, test_clean_up)
+{
+    SparceMatrix a(N);
+
+    default_random_engine eng;
+    uniform_real_distribution<double> dr;
+    uniform_int_distribution<AbstractMatrix::Index> di(0, N - 1);
+
+    eng.seed(default_random_engine::result_type(
+        chrono::system_clock::now().time_since_epoch().count()));
+
+    for (auto count = 0; count < 30; ++count) {
+        auto value = dr(eng);
+        auto i = di(eng);
+        auto j = di(eng);
+
+        a.add(i, j, value);
+        a.sub(i, j, value);
+    }
+    a.remove_zeroes();
+
+    ASSERT_EQ(a.non_zero(), 0);
+}
+
+TEST(TestSparce, test_solve_rand)
+{
+    SparceMatrix a(N);
+    Vec x(N, 0.);
+
+    default_random_engine eng;
+    uniform_real_distribution<double> dr;
+    uniform_int_distribution<AbstractMatrix::Index> di(0, N - 1);
+
+    eng.seed(default_random_engine::result_type(
+        chrono::system_clock::now().time_since_epoch().count()));
+    for (AbstractMatrix::Index i = 0; i < N; ++i) {
+        a.set(i, i, dr(eng));
+        x[i] = dr(eng);
+    }
+
+    for (auto count = 0; count < 30; ++count) {
+        auto value = dr(eng);
+        auto i = di(eng);
+        auto j = di(eng);
+
+        a.add(i, j, value);
+        a.add(j, i, value);
+    }
+    a.remove_zeroes();
+
+    auto b = a * x;
+    auto y = solve(a, b, Vec(N, 0.));
+
+    ASSERT_EQ(x, y);
 }
 
 TEST(TestSparce, test_solve)

@@ -9,8 +9,8 @@
 using namespace std;
 
 Triangulation::Triangulation(const array<double, 3>& dim)
-    : size_(0)
-    , dim_(dim)
+    : dim_(dim)
+    , size_(0)
     , nodes_()
     , elems_()
     , first_()
@@ -85,6 +85,11 @@ void Triangulation::append_elem(const FiniteElement& e)
             third_.emplace_back(move(f));
         }
     }
+}
+
+Triangulation::Index Triangulation::get_index(const NodePtr& ptr)
+{
+    return ptr->second;
 }
 
 Triangulation::FiniteElementData Triangulation::data(const FiniteElement& e)
