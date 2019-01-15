@@ -3,9 +3,9 @@
 
 #define NODE_FIRST
 
-#ifdef NODE_FIRST
-
 using Index = Triangulation::Index;
+
+#ifdef NODE_FIRST
 
 Index _g(const Index& node, const Index& coord, const Index& m)
 {

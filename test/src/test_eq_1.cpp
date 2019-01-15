@@ -9,20 +9,20 @@
 
 using namespace std;
 
-struct Data {
-    Data()
-        : t(Triangulation::cuboid({40, 40, 200}, 4))
-        , gen()
-        , glob(build_global_system(t, LocalEqGen(v17)))
-    {
-    }
+struct TestEq1 : ::testing::Test {
+    struct Data {
+        Data()
+            : t(Triangulation::cuboid({200, 40, 40}, 4))
+            , gen()
+            , glob(build_global_system(t, gen))
+        {
+        }
 
-    Triangulation t;
-    LocalEqV17 gen;
-    pair<SparceMatrix, Vec> glob;
-};
+        Triangulation t;
+        LocalEqV17 gen;
+        pair<SparceMatrix, Vec> glob;
+    };
 
-struct TestEq : ::testing::Test {
 protected:
     void SetUp()
     {
@@ -37,7 +37,7 @@ protected:
     unique_ptr<Data> d;
 };
 
-TEST_F(TestEq, test_symmetric)
+TEST_F(TestEq1, test_symmetric)
 {
     auto& mat = d->glob.first;
 
@@ -57,7 +57,7 @@ TEST_F(TestEq, test_symmetric)
     SUCCEED();
 }
 
-TEST_F(TestEq, test_zero_rows)
+TEST_F(TestEq1, test_zero_rows)
 {
     auto& mat = d->glob.first;
 
@@ -75,7 +75,7 @@ TEST_F(TestEq, test_zero_rows)
     SUCCEED();
 }
 
-TEST_F(TestEq, test_zero_cols)
+TEST_F(TestEq1, test_zero_cols)
 {
     auto& mat = d->glob.first;
     auto m = mat.shape().m;

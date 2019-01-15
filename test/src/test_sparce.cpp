@@ -9,7 +9,7 @@
 
 using namespace std;
 
-static constexpr AbstractMatrix::Index N = 100;
+static constexpr AbstractMatrix::Index N = 1000;
 
 TEST(TestSparce, test_modify)
 {
@@ -62,7 +62,7 @@ TEST(TestSparce, test_clean_up)
     eng.seed(default_random_engine::result_type(
         chrono::system_clock::now().time_since_epoch().count()));
 
-    for (auto count = 0; count < 30; ++count) {
+    for (auto count = 0; count < 2 * N; ++count) {
         auto value = dr(eng);
         auto i = di(eng);
         auto j = di(eng);
@@ -91,7 +91,7 @@ TEST(TestSparce, test_solve_rand)
         x[i] = dr(eng);
     }
 
-    for (auto count = 0; count < 30; ++count) {
+    for (auto count = 0; count < 2 * N; ++count) {
         auto value = dr(eng);
         auto i = di(eng);
         auto j = di(eng);

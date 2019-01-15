@@ -6,6 +6,8 @@
 #include <iterator>
 #include <unordered_set>
 
+#include <mke2/global_indices.hpp>
+
 using namespace std;
 
 Triangulation::Triangulation(const array<double, 3>& dim)
@@ -129,6 +131,14 @@ Triangulation::OnFirst Triangulation::on_first(const NodePtr& n) const
     }
 
     return result;
+}
+
+Triangulation::OnFirst Triangulation::coord_on_first(OnFirst node,
+                                                     Index coord) const
+{
+
+    return {node.on_sigma_1 && (coord == Coord::X || coord == Coord::Z),
+            node.on_sigma_2 && (coord == Coord::Y)};
 }
 
 bool Triangulation::is_boundary(const SurfaceElement& e) const

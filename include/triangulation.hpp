@@ -54,6 +54,7 @@ public:
 
     bool on_third(const SurfaceElement& e) const;
     OnFirst on_first(const NodePtr& n) const;
+    OnFirst coord_on_first(OnFirst node, Index coord) const;
 
     static Triangulation cuboid(std::array<double, DIM> dim, size_t scale);
 
