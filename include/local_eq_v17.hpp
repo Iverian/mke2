@@ -5,8 +5,10 @@
 
 class LocalEqV17 : public AbstractLocalEq {
 public:
-    Result get_internal(Triangulation::FiniteElementData elem) const override;
-    Result get_boundary(Triangulation::SurfaceElementData elem) const override;
+    Result
+    get_internal(Triangulation::FiniteElement::Data elem) const override;
+    Result
+    get_boundary(Triangulation::SurfaceElement::Data elem) const override;
 };
 
 LocalEqGen::result_type v17(const Triangulation& t,

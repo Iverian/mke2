@@ -14,9 +14,9 @@ public:
 
     virtual ~AbstractLocalEq() = default;
     virtual Result
-    get_internal(Triangulation::FiniteElementData elem) const = 0;
+    get_internal(Triangulation::FiniteElement::Data elem) const = 0;
     virtual Result
-    get_boundary(Triangulation::SurfaceElementData elem) const = 0;
+    get_boundary(Triangulation::SurfaceElement::Data elem) const = 0;
 };
 
 using LocalEqGen = std::function<std::pair<DenseMatrix, Vec>(

@@ -11,6 +11,8 @@
 #include <memory>
 #include <stdexcept>
 
+// #define THIRD_SEP
+
 using namespace std;
 
 static constexpr auto xdim = 200.;
@@ -28,9 +30,12 @@ int main(int argc, char const* argv[])
 
         auto t = Triangulation::cuboid({xdim, ydim, zdim}, scale);
 
+#ifdef THIRD_SEP
         LocalEqV17 gen;
         auto glob = build_global_system(t, gen);
-
+#else
+        auto glob = build_global_system(t, LocalEqGen(v17));
+#endif
         auto start = chrono::high_resolution_clock::now();
 
         auto x0 = Vec(glob.second.size(), init);

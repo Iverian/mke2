@@ -32,7 +32,7 @@ void mv2_export(ostream& os, const Triangulation& t, const Vec& values)
     auto& tr = t.triangles();
     for (Triangulation::Index i = 0; i < n; ++i) {
         auto& e = tr[i];
-        os << (i + 1) << " " << (e[0]->second + 1) << " " << (e[1]->second + 1)
-           << " " << (e[2]->second + 1) << " 1 1 0" << endl;
+        os << (i + 1) << " " << (e[0].index() + 1) << " " << (e[1].index() + 1)
+           << " " << (e[2].index() + 1) << " 1 1 0" << endl;
     }
 }

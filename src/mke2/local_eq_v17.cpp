@@ -15,10 +15,10 @@ using namespace std;
 using Index = Triangulation::Index;
 
 class V17InternalGen {
-    const Triangulation::FiniteElementData data;
+    const Triangulation::FiniteElement::Data data;
 
 public:
-    explicit V17InternalGen(const Triangulation::FiniteElementData& data);
+    explicit V17InternalGen(const Triangulation::FiniteElement::Data& data);
 
     double vk() const;
     DenseMatrix gk() const;
@@ -29,10 +29,10 @@ private:
 };
 
 class V17SurfaceGen {
-    const Triangulation::SurfaceElementData data;
+    const Triangulation::SurfaceElement::Data data;
 
 public:
-    explicit V17SurfaceGen(const Triangulation::SurfaceElementData& data);
+    explicit V17SurfaceGen(const Triangulation::SurfaceElement::Data& data);
 
     DenseMatrix boundary(double val) const;
 };
@@ -54,7 +54,7 @@ public:
 };
 
 LocalEqV17::Result
-LocalEqV17::get_internal(Triangulation::FiniteElementData elem) const
+LocalEqV17::get_internal(Triangulation::FiniteElement::Data elem) const
 {
     V17InternalGen g(elem);
 
@@ -69,7 +69,7 @@ LocalEqV17::get_internal(Triangulation::FiniteElementData elem) const
 }
 
 LocalEqV17::Result
-LocalEqV17::get_boundary(Triangulation::SurfaceElementData elem) const
+LocalEqV17::get_boundary(Triangulation::SurfaceElement::Data elem) const
 {
     V17SurfaceGen g(elem);
 
@@ -85,7 +85,7 @@ LocalEqV17::get_boundary(Triangulation::SurfaceElementData elem) const
     return {mat * cnst::mu, vec};
 }
 
-V17InternalGen::V17InternalGen(const Triangulation::FiniteElementData& data_)
+V17InternalGen::V17InternalGen(const Triangulation::FiniteElement::Data& data_)
     : data(data_)
 {
 }
@@ -145,7 +145,7 @@ DenseMatrix V17InternalGen::internal(double val) const
     return result;
 }
 
-V17SurfaceGen::V17SurfaceGen(const Triangulation::SurfaceElementData& data_)
+V17SurfaceGen::V17SurfaceGen(const Triangulation::SurfaceElement::Data& data_)
     : data(data_)
 {
 }
@@ -187,7 +187,7 @@ V17Gen::V17Gen(const Triangulation& t_,
                const Triangulation::FiniteElement& elem_)
     : t(t_)
     , elem(elem_)
-    , igen(Triangulation::data(elem_))
+    , igen(elem_.data())
 {
 }
 
@@ -205,7 +205,7 @@ DenseMatrix V17Gen::boundary(double val) const
 {
     DenseMatrix result({4, 4});
     for (Index i = 0; i < Triangulation::N; ++i) {
-        auto f = Triangulation::face(elem, i);
+        auto f = elem.face(i);
         if (t.on_third(f)) {
             result += boundary(f, i, val);
         }
@@ -216,7 +216,7 @@ DenseMatrix V17Gen::boundary(double val) const
 DenseMatrix V17Gen::boundary(const Triangulation::SurfaceElement& face,
                              Index i, double val) const
 {
-    auto data = Triangulation::data(face);
+    auto data = face.data();
 
     DenseMatrix result({4, 4}, 0.);
     auto m = (i + 1) % Triangulation::N;
