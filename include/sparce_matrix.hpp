@@ -37,12 +37,12 @@ public:
     void remove_zeroes();
 
     friend Vec operator*(const SparceMatrix& lhs, const Vec& rhs);
+    friend Vec operator*(const Vec& lhs, const SparceMatrix& rhs);
     friend void dot(Vec& result, const SparceMatrix& lhs, const Vec& rhs);
+    friend void dot(Vec& result, const Vec& lhs, const SparceMatrix& rhs);
 
     friend Vec solve(const SparceMatrix& lhs, const Vec& rhs, Vec x0);
     friend Vec solve_p(const SparceMatrix& lhs, const Vec& rhs, Vec x0);
-    friend void mdot_diag(Vec& result, const SparceMatrix& lhs,
-                          const Vec& rhs);
 
     friend std::ostream& operator<<(std::ostream& os, const SparceMatrix& obj);
 

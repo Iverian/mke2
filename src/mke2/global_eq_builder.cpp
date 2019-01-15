@@ -85,14 +85,13 @@ pair<SparceMatrix, Vec> build_global_system(const Triangulation& t,
                 for (Index p = 0; p < Triangulation::DIM; ++p) {
                     for (Index q = 0; q < Triangulation::DIM; ++q) {
                         auto cip = t.coord_on_first(ci, p);
-                        auto cjq = t.coord_on_first(cj, q);
-
-                        auto gip = _g(gi, p, m);
-                        auto gjq = _g(gj, q, m);
-
-                        auto val = r.first(_v(i, p), _v(j, q));
 
                         if (!cip) {
+                            auto cjq = t.coord_on_first(cj, q);
+                            auto gip = _g(gi, p, m);
+                            auto gjq = _g(gj, q, m);
+                            auto val = r.first(_v(i, p), _v(j, q));
+
                             if (!cjq) {
                                 mat.add(gip, gjq, val);
                             } else {

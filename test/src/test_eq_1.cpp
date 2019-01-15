@@ -6,6 +6,7 @@
 #include <util.hpp>
 
 #include <memory>
+#include <random>
 
 using namespace std;
 
@@ -101,4 +102,27 @@ TEST_F(TestEq1, test_zero_cols)
     }
 
     ASSERT_EQ(count, m);
+}
+
+TEST_F(TestEq1, test_positive)
+{
+    auto& mat = d->glob.first;
+    auto m = mat.shape().m;
+
+    default_random_engine eng;
+    uniform_real_distribution<double> dr(-1., 1.);
+
+    Vec x(m, 0.), y(m, 0.);
+    for (size_t count = 0; count < 100; ++count) {
+        for (auto& xi : x) {
+            xi = dr(eng);
+        }
+        dot(y, mat, x);
+
+        auto res = dot(x, y);
+        if (res < 0) {
+            coutd << "count=" << count << ", res=" << res << endl;
+        }
+        ASSERT_GT(res, 0);
+    }
 }
