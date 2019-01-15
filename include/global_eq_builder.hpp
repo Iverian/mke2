@@ -5,26 +5,13 @@
 #include "sparce_matrix.hpp"
 #include "triangulation.hpp"
 
-#include <tuple>
+std::pair<SparceMatrix, Vec> build_global_system(const Triangulation& t,
+                                                 LocalEqGen gen);
 
-class GlobalEqBuilder {
-public:
-    using Index = AbstractMatrix::Index;
+std::pair<SparceMatrix, Vec> build_global_system(const Triangulation& t,
+                                                 AbstractLocalEq& gen);
 
-    explicit GlobalEqBuilder(const Triangulation& triang,
-                             std::shared_ptr<AbstractLocalEq> gen);
-
-    GlobalEqBuilder& get();
-
-    SparceMatrix& mat();
-    Vec& vec();
-
-private:
-    const Triangulation& t_;
-    std::shared_ptr<AbstractLocalEq> g_;
-    Index m_;
-    SparceMatrix lhs_;
-    Vec rhs_;
-};
+std::pair<SparceMatrix, Vec> build_global_system_old(const Triangulation& t,
+                                                     AbstractLocalEq& gen);
 
 #endif // MKE2_INCLUDE_GLOBAL_EQ_BUILDER_HPP_
