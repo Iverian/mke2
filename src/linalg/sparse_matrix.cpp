@@ -1,6 +1,6 @@
 #include <debug.hpp>
 #include <dense_matrix.hpp>
-#include <sparce_matrix.hpp>
+#include <sparse_matrix.hpp>
 #include <util.hpp>
 #include <vec.hpp>
 
@@ -11,7 +11,7 @@
 
 using namespace std;
 
-SparceMatrix::SparceMatrix()
+SparseMatrix::SparseMatrix()
     : data_()
     , diag_()
     , indptr_(1)
@@ -22,12 +22,12 @@ SparceMatrix::SparceMatrix()
 
 #define _(i, j) ((i) * (m_) + (j))
 
-SparceMatrix::SparceMatrix(Index side, const DataContainer& vals)
+SparseMatrix::SparseMatrix(Index side, const DataContainer& vals)
     : data_()
     , diag_(side)
     , indptr_(side + 1)
     , indices_()
-    , nnz_(0)
+    , non_zero_(0)
     , m_(side)
 {
     if (!vals.empty()) {
@@ -42,7 +42,7 @@ SparceMatrix::SparceMatrix(Index side, const DataContainer& vals)
                         indices_.emplace_back(j);
                         ++indptr_[i + 1];
                     }
-                    ++nnz_;
+                    ++non_zero_;
                 }
             }
         }
@@ -59,42 +59,42 @@ SparceMatrix::SparceMatrix(Index side, const DataContainer& vals)
 
 #undef _
 
-SparceMatrix::Index SparceMatrix::size() const
+SparseMatrix::Index SparseMatrix::size() const
 {
     return m_ * m_;
 }
 
-SparceMatrix::Shape SparceMatrix::shape() const
+SparseMatrix::Shape SparseMatrix::shape() const
 {
     return {m_, m_};
 }
 
-SparceMatrix::Index SparceMatrix::non_zero() const
+SparseMatrix::Index SparseMatrix::non_zero() const
 {
-    return nnz_;
+    return non_zero_;
 }
 
-const SparceMatrix::DataContainer& SparceMatrix::data() const noexcept
+const SparseMatrix::DataContainer& SparseMatrix::data() const noexcept
 {
     return data_;
 }
 
-const SparceMatrix::DataContainer& SparceMatrix::diag() const noexcept
+const SparseMatrix::DataContainer& SparseMatrix::diag() const noexcept
 {
     return diag_;
 }
 
-const SparceMatrix::IndexContainer& SparceMatrix::indptr() const noexcept
+const SparseMatrix::IndexContainer& SparseMatrix::indptr() const noexcept
 {
     return indptr_;
 }
 
-const SparceMatrix::IndexContainer& SparceMatrix::indices() const noexcept
+const SparseMatrix::IndexContainer& SparseMatrix::indices() const noexcept
 {
     return indices_;
 }
 
-SparceMatrix::Value SparceMatrix::operator()(Index i, Index j) const
+SparseMatrix::Value SparseMatrix::operator()(Index i, Index j) const
 {
     check_if(i < m_ && j < m_, "Index out of range");
 
@@ -116,22 +116,36 @@ SparceMatrix::Value SparceMatrix::operator()(Index i, Index j) const
     return result;
 }
 
-SparceMatrix::Value SparceMatrix::add(Index i, Index j, Value val)
+SparseMatrix::Value SparseMatrix::add(Index i, Index j, Value val)
 {
     return fetch_modify(i, j, [&val](auto x) { return x + val; });
 }
 
-SparceMatrix::Value SparceMatrix::sub(Index i, Index j, Value val)
+SparseMatrix::Value SparseMatrix::sub(Index i, Index j, Value val)
 {
     return fetch_modify(i, j, [&val](auto x) { return x - val; });
 }
 
-SparceMatrix::Value SparceMatrix::set(Index i, Index j, Value val)
+SparseMatrix::Value SparseMatrix::set(Index i, Index j, Value val)
 {
     return fetch_modify(i, j, [&val](auto) { return val; });
 }
 
-void SparceMatrix::remove_zeroes()
+SparseMatrix::Value SparseMatrix::unit_row(Index i, Value val)
+{
+    auto k = indptr_[i];
+    auto last = indptr_[i + 1];
+    auto result = diag_[i];
+
+    diag_[i] = val;
+    for (; k < last; ++k) {
+        data_[k] = 0;
+    }
+
+    return result;
+}
+
+void SparseMatrix::remove_zeroes()
 {
     DataContainer new_data;
     IndexContainer new_indptr(m_ + 1, 0);
@@ -147,7 +161,7 @@ void SparceMatrix::remove_zeroes()
                 new_indices.emplace_back(indices_[k]);
                 ++new_indptr[i + 1];
             } else {
-                --nnz_;
+                --non_zero_;
             }
         }
     }
@@ -163,25 +177,25 @@ void SparceMatrix::remove_zeroes()
     indices_ = move(new_indices);
 }
 
-Vec operator*(const SparceMatrix& lhs, const Vec& rhs)
+Vec operator*(const SparseMatrix& lhs, const Vec& rhs)
 {
     Vec result(lhs.m_, 0.);
     dot(result, lhs, rhs);
     return result;
 }
 
-Vec operator*(const Vec& lhs, const SparceMatrix& rhs)
+Vec operator*(const Vec& lhs, const SparseMatrix& rhs)
 {
     Vec result(rhs.m_, 0.);
     dot(result, lhs, rhs);
     return result;
 }
 
-void dot(Vec& result, const SparceMatrix& lhs, const Vec& rhs)
+void dot(Vec& result, const SparseMatrix& lhs, const Vec& rhs)
 {
     check_if(lhs.m_ == rhs.size(), "Incompatible shapes");
 
-    for (SparceMatrix::Index i = 0; i < lhs.m_; ++i) {
+    for (SparseMatrix::Index i = 0; i < lhs.m_; ++i) {
         auto u = lhs.diag_[i] * rhs[i];
         auto k = lhs.indptr_[i];
         auto last = lhs.indptr_[i + 1];
@@ -192,11 +206,11 @@ void dot(Vec& result, const SparceMatrix& lhs, const Vec& rhs)
     }
 }
 
-void dot(Vec& result, const Vec& lhs, const SparceMatrix& rhs)
+void dot(Vec& result, const Vec& lhs, const SparseMatrix& rhs)
 {
     check_if(lhs.size() == rhs.m_, "Incompatible shapes");
 
-    for (SparceMatrix::Index i = 0; i < rhs.m_; ++i) {
+    for (SparseMatrix::Index i = 0; i < rhs.m_; ++i) {
         auto k = rhs.indptr_[i];
         auto last = rhs.indptr_[i + 1];
         for (; k < last; ++k) {
@@ -206,10 +220,10 @@ void dot(Vec& result, const Vec& lhs, const SparceMatrix& rhs)
     }
 }
 
-ostream& operator<<(ostream& os, const SparceMatrix& obj)
+ostream& operator<<(ostream& os, const SparseMatrix& obj)
 {
     auto m = obj.m_;
-    SparceMatrix::Index i, j;
+    SparseMatrix::Index i, j;
 
     os << "{\"shape\": " << obj.shape() << ", \"data\": [";
     for (i = 0; i < m; ++i) {

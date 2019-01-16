@@ -1,5 +1,5 @@
-#include "global_indices.hpp"
-#include "debug.hpp"
+#include <debug.hpp>
+#include <global_indices.hpp>
 
 #define NODE_FIRST
 

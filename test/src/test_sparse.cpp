@@ -2,7 +2,7 @@
 
 #include <debug.hpp>
 #include <dense_matrix.hpp>
-#include <sparce_matrix.hpp>
+#include <sparse_matrix.hpp>
 
 #include <chrono>
 #include <random>
@@ -11,9 +11,9 @@ using namespace std;
 
 static constexpr AbstractMatrix::Index N = 1000;
 
-TEST(TestSparce, test_modify)
+TEST(TestSparse, test_modify)
 {
-    SparceMatrix a(N);
+    SparseMatrix a(N);
     DenseMatrix b({N, N}, 0);
 
     default_random_engine eng;
@@ -51,9 +51,9 @@ TEST(TestSparce, test_modify)
     SUCCEED();
 }
 
-TEST(TestSparce, test_clean_up)
+TEST(TestSparse, test_clean_up)
 {
-    SparceMatrix a(N);
+    SparseMatrix a(N);
 
     default_random_engine eng;
     uniform_real_distribution<double> dr;
@@ -75,9 +75,9 @@ TEST(TestSparce, test_clean_up)
     ASSERT_EQ(a.non_zero(), 0);
 }
 
-TEST(TestSparce, test_solve_rand)
+TEST(TestSparse, test_solve_rand)
 {
-    SparceMatrix a(N);
+    SparseMatrix a(N);
     Vec x(N, 0.);
 
     default_random_engine eng;
@@ -107,9 +107,9 @@ TEST(TestSparce, test_solve_rand)
     ASSERT_EQ(x, y);
 }
 
-TEST(TestSparce, test_solve)
+TEST(TestSparse, test_solve)
 {
-    SparceMatrix m(5, {1, 0, 0, 2, 0, 0, 4, 0, 1, 0, 0, 0, 3,
+    SparseMatrix m(5, {1, 0, 0, 2, 0, 0, 4, 0, 1, 0, 0, 0, 3,
                        0, 0, 2, 1, 0, 3, 1, 0, 0, 0, 1, 1});
     Vec x {1000, 2000, 100, 4000, 1};
     Vec x0 {0, 0, 0, 0, 0};

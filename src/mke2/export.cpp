@@ -1,6 +1,5 @@
 #include <export.hpp>
-
-#include "global_indices.hpp"
+#include <global_indices.hpp>
 
 #include <tuple>
 

@@ -2,6 +2,7 @@
 #define MKE2_INCLUDE_TRIANG_BUILDER_H_
 
 #include <array>
+#include <iostream>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -48,6 +49,9 @@ public:
         SurfaceElement(const Super& data = Super());
 
         Data data() const;
+
+        friend std::ostream& operator<<(std::ostream& os,
+                                        const SurfaceElement& obj);
     };
 
     struct FiniteElement : std::array<NodePtr, N> {
@@ -58,8 +62,12 @@ public:
 
         Data data() const;
         SurfaceElement face(Index i) const;
+
+        friend std::ostream& operator<<(std::ostream& os,
+                                        const FiniteElement& obj);
     };
 
+    Triangulation();
     explicit Triangulation(const std::array<double, DIM>& dim);
 
     const std::array<double, DIM>& dim() const;
@@ -81,6 +89,9 @@ public:
     bool on_third(const SurfaceElement& e) const;
     OnFirst on_first(const NodePtr& n) const;
     OnFirst coord_on_first(OnFirst node, Index coord) const;
+
+    friend std::ostream& operator<<(std::ostream& os,
+                                    const Triangulation& obj);
 
     static Triangulation cuboid(std::array<double, DIM> dim, size_t scale);
 

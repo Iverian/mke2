@@ -1,4 +1,5 @@
 #include <debug.hpp>
+#include <global_indices.hpp>
 #include <triangulation.hpp>
 #include <util.hpp>
 
@@ -6,9 +7,17 @@
 #include <iterator>
 #include <unordered_set>
 
-#include <mke2/global_indices.hpp>
-
 using namespace std;
+
+Triangulation::Triangulation()
+    : dim_ {0, 0, 0}
+    , size_(0)
+    , nodes_()
+    , elems_()
+    , first_()
+    , third_()
+{
+}
 
 Triangulation::Triangulation(const array<double, 3>& dim)
     : dim_(dim)
@@ -78,17 +87,6 @@ Triangulation::append_nodes(const vector<Point3d>& vp)
     return result;
 }
 
-// void Triangulation::append_elem(const FiniteElement& e)
-// {
-//     elems_.push_back(e);
-//     for (Index i = 0; i < N; ++i) {
-//         auto f = e.face(i);
-//         if (on_third(f)) {
-//             third_.emplace_back(move(f));
-//         }
-//     }
-// }
-
 Triangulation::Index Triangulation::NodePtr::index() const
 {
     return ptr->second;
@@ -111,11 +109,8 @@ Triangulation::SurfaceElement::Data Triangulation::SurfaceElement::data() const
 
 Triangulation::SurfaceElement Triangulation::FiniteElement::face(Index i) const
 {
-    SurfaceElement face;
-    for (Index j = 0; j < SN; ++j) {
-        face[i] = (*this)[(i + j + 1) % N];
-    }
-    return face;
+    return SurfaceElement(
+        {(*this)[(i + 1) % N], (*this)[(i + 2) % N], (*this)[(i + 3) % N]});
 }
 
 Triangulation::FiniteElement::FiniteElement(const Super& data)
@@ -158,8 +153,9 @@ Triangulation::OnFirst Triangulation::coord_on_first(OnFirst node,
                                                      Index coord) const
 {
 
-    return {node.on_sigma_1 && (coord == Coord::X || coord == Coord::Z),
-            node.on_sigma_2 && (coord == Coord::Y)};
+    return {node.on_sigma_1
+                && (coord == Index(Coord::X) || coord == Index(Coord::Z)),
+            node.on_sigma_2 && (coord == Index(Coord::Y))};
 }
 
 bool Triangulation::is_boundary(const SurfaceElement& e) const
@@ -240,4 +236,60 @@ Triangulation Triangulation::cuboid(array<double, DIM> dim, size_t scale)
     }
 
     return result;
+}
+
+ostream& operator<<(ostream& os, const Triangulation& obj)
+{
+    size_t i, j;
+    const auto m = obj.nodes_.size();
+    const auto n = obj.elems_.size();
+    const auto q = obj.third_.size();
+
+    vector<Point3d> nodes(m);
+    for (auto& n : obj.nodes_) {
+        nodes[n.second] = n.first;
+    }
+    os << "{";
+    os << " \"dim\": [ " << obj.dim_[0] << ", " << obj.dim_[1] << ", "
+       << obj.dim_[2] << "],";
+
+    os << " \"nodes\": [ ";
+    for (i = 0; i < m; ++i) {
+        os << nodes[i] << (i + 1 != m ? ", " : "],");
+    }
+
+    os << " \"elems\":[ ";
+    for (i = 0; i < n; ++i) {
+        os << obj.elems_[i] << (i + 1 != n ? ", " : "],");
+    }
+
+    os << " \"first\":[ ";
+    for (i = 0; i < 2; ++i) {
+        const auto p = obj.first_[i].size();
+        os << "[";
+        for (j = 0; j < p; ++j) {
+            os << obj.first_[i][j].index() << (j + 1 != p ? ", " : "]");
+        }
+        os << (i + 1 != 2 ? ", " : "],");
+    }
+
+    os << " \"third\":[ ";
+    for (i = 0; i < q; ++i) {
+        os << obj.third_[i] << (i + 1 != q ? ", " : "]");
+    }
+    os << "}";
+
+    return os;
+}
+
+ostream& operator<<(ostream& os, const Triangulation::SurfaceElement& obj)
+{
+    return os << "[" << obj[0].index() << ", " << obj[1].index() << ", "
+              << obj[2].index() << "]";
+}
+
+ostream& operator<<(ostream& os, const Triangulation::FiniteElement& obj)
+{
+    return os << "[" << obj[0].index() << ", " << obj[1].index() << ", "
+              << obj[2].index() << ", " << obj[3].index() << "]";
 }

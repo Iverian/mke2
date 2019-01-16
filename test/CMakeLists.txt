@@ -5,18 +5,19 @@ file(GLOB TEST_SOURCES "src/test_*.cpp")
 
 ###################################################
 # Make all tests in single executable
+
 add_executable(all_tests
     "src/all_tests.cpp"
     ${TEST_SOURCES}
 )
 
 target_include_directories(all_tests
-    PRIVATE
+    PUBLIC
         "../src"
 )
 
 target_link_libraries(all_tests
-    PRIVATE
+    PUBLIC
         ${LIBPROXY}
         CONAN_PKG::gtest
 )

@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <global_eq_builder.hpp>
+#include <global_indices.hpp>
 #include <local_eq_v17.hpp>
 #include <triangulation.hpp>
 #include <util.hpp>
@@ -21,7 +22,7 @@ struct TestEq1 : ::testing::Test {
 
         Triangulation t;
         LocalEqV17 gen;
-        pair<SparceMatrix, Vec> glob;
+        pair<SparseMatrix, Vec> glob;
     };
 
 protected:
@@ -42,7 +43,7 @@ TEST_F(TestEq1, test_symmetric)
 {
     auto& mat = d->glob.first;
 
-    for (SparceMatrix::Index i = 0; i < mat.shape().m; ++i) {
+    for (SparseMatrix::Index i = 0; i < mat.shape().m; ++i) {
         auto k = mat.indptr()[i];
         auto last = mat.indptr()[i + 1];
 
@@ -62,7 +63,7 @@ TEST_F(TestEq1, test_zero_rows)
 {
     auto& mat = d->glob.first;
 
-    for (SparceMatrix::Index i = 0; i < mat.shape().m; ++i) {
+    for (SparseMatrix::Index i = 0; i < mat.shape().m; ++i) {
         auto first = mat.indptr()[i];
         auto last = mat.indptr()[i + 1];
 
@@ -124,5 +125,38 @@ TEST_F(TestEq1, test_positive)
             coutd << "count=" << count << ", res=" << res << endl;
         }
         ASSERT_GT(res, 0);
+    }
+}
+
+TEST_F(TestEq1, strict_first_boundary_condition)
+{
+    auto& t = d->t;
+    auto& [mat, vec] = d->glob;
+    const auto m = mat.shape().m;
+
+    for (auto& n : t.first()[0]) {
+        auto gn = n.index();
+
+        for (auto p : {Coord::X, Coord::Z}) {
+            auto gnp = _g(gn, p, m);
+
+            auto a = mat.indptr()[gnp];
+            auto b = mat.indptr()[gnp + 1];
+            ASSERT_EQ(a, b);
+            ASSERT_DOUBLE_EQ(mat.diag()[gnp], 1);
+        }
+    }
+
+    for (auto& n : t.first()[1]) {
+        auto gn = n.index();
+
+        for (auto p : {Coord::Y}) {
+            auto gnp = _g(gn, p, m);
+
+            auto a = mat.indptr()[gnp];
+            auto b = mat.indptr()[gnp + 1];
+            ASSERT_EQ(a, b);
+            ASSERT_DOUBLE_EQ(mat.diag()[gnp], 1);
+        }
     }
 }

@@ -2,7 +2,7 @@
 #include <export.hpp>
 #include <global_eq_builder.hpp>
 #include <local_eq_v17.hpp>
-#include <sparce_matrix.hpp>
+#include <sparse_matrix.hpp>
 #include <triangulation.hpp>
 
 #include <chrono>
@@ -11,7 +11,7 @@
 #include <memory>
 #include <stdexcept>
 
-// #define THIRD_SEP
+#define THIRD_SEP
 
 using namespace std;
 
@@ -29,6 +29,10 @@ int main(int argc, char const* argv[])
         }
 
         auto t = Triangulation::cuboid({xdim, ydim, zdim}, scale);
+
+        cout << t;
+
+        return 0;
 
 #ifdef THIRD_SEP
         LocalEqV17 gen;

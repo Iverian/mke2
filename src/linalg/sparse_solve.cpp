@@ -1,5 +1,5 @@
 #include <debug.hpp>
-#include <sparce_matrix.hpp>
+#include <sparse_matrix.hpp>
 
 #include <cmath>
 
@@ -11,9 +11,9 @@ void cax_y(Vec& res, double a, const Vec& x, const Vec& y);
 void cax_by_z(Vec& res, double a, const Vec& x, double b, const Vec& y,
               const Vec& z);
 double cdist(const Vec& lhs, const Vec& rhs);
-void mdot_diag(Vec& result, const SparceMatrix& lhs, const Vec& rhs);
+void mdot_diag(Vec& result, const SparseMatrix& lhs, const Vec& rhs);
 
-Vec solve(const SparceMatrix& lhs, const Vec& rhs, Vec x0)
+Vec solve(const SparseMatrix& lhs, const Vec& rhs, Vec x0)
 {
     auto [m, n] = lhs.shape();
     check_if(rhs.size() == n, "Incompatible shapes");
@@ -79,7 +79,7 @@ Vec solve(const SparceMatrix& lhs, const Vec& rhs, Vec x0)
     return x;
 }
 
-Vec solve_p(const SparceMatrix& lhs, const Vec& rhs, Vec x0)
+Vec solve_p(const SparseMatrix& lhs, const Vec& rhs, Vec x0)
 {
     auto [m, n] = lhs.shape();
     check_if(rhs.size() == n, "Incompatible shapes");
@@ -156,16 +156,16 @@ Vec solve_p(const SparceMatrix& lhs, const Vec& rhs, Vec x0)
     return x;
 }
 
-void mdot_diag(Vec& result, const SparceMatrix& lhs, const Vec& rhs)
+void mdot_diag(Vec& result, const SparseMatrix& lhs, const Vec& rhs)
 {
-    for (SparceMatrix::Index i = 0; i < lhs.shape().m; ++i) {
+    for (SparseMatrix::Index i = 0; i < lhs.shape().m; ++i) {
         result[i] = rhs[i] / lhs.diag()[i];
     }
 }
 
 void cax_y(Vec& res, double a, const Vec& x, const Vec& y)
 {
-    SparceMatrix::Index i, n = res.size();
+    SparseMatrix::Index i, n = res.size();
 
     for (i = 0; i < n; ++i) {
         res[i] = a * x[i] + y[i];
@@ -175,7 +175,7 @@ void cax_y(Vec& res, double a, const Vec& x, const Vec& y)
 void cax_by_z(Vec& res, double a, const Vec& x, double b, const Vec& y,
               const Vec& z)
 {
-    SparceMatrix::Index i, n = res.size();
+    SparseMatrix::Index i, n = res.size();
 
     for (i = 0; i < n; ++i) {
         res[i] = a * x[i] + b * y[i] + z[i];

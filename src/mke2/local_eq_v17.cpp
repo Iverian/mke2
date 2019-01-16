@@ -62,7 +62,7 @@ LocalEqV17::get_internal(Triangulation::FiniteElement::Data elem) const
     auto e3 = DenseMatrix::eye(Triangulation::DIM);
     auto s0 = kroneker_product(g.internal(vk * cnst::rho / 120), e3);
 
-    auto mat = vk * g.gk() / 6 - sqr(cnst::omega) * s0;
+    auto mat = (vk / 6) * g.gk() - sqr(cnst::omega) * s0;
     auto vec = Vec(Triangulation::DIM * Triangulation::N, 0.);
 
     return {mat, vec};
