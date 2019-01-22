@@ -15,7 +15,8 @@ std::vector<Point3d> combine(const std::initializer_list<double>& x,
                              const std::initializer_list<double>& z);
 
 class Point3d : public std::array<double, 3> {
-    using Super = std::array<double, 3>;
+    static constexpr size_t N = 3;
+    using Super = std::array<double, N>;
 
 public:
     using Super::Super;
@@ -58,8 +59,11 @@ struct hash<Point3d> {
 
     size_t operator()(const argument_type& key) const
     {
-        return (hasher_(key[0]) << 2) ^ (hasher_(key[1]) << 1)
-            ^ hasher_(key[0]);
+        size_t result = 16651;
+        for (auto& i : key) {
+            result = (result << 1) ^ hasher_(i);
+        }
+        return result;
     }
 
 private:

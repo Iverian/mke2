@@ -161,7 +161,7 @@ DenseMatrix V17SurfaceGen::boundary(double val) const
     return result;
 }
 
-// Генератор, совмещающий матрицу по границе и по оьъему
+// Генератор, совмещающий матрицу по границе и по объему
 LocalEqGen::result_type v17(const Triangulation& t,
                             const Triangulation::FiniteElement& elem)
 {
@@ -225,7 +225,8 @@ DenseMatrix V17Gen::boundary(const Triangulation::SurfaceElement& face,
     auto c = norm(cross(data[0] - data[2], data[1] - data[2]));
 
     result(m, m) = result(n, n) = result(p, p) = 2 * c * val;
-    result(m, n) = result(m, p) = result(n, p) = 1 * c * val;
+    result(m, n) = result(m, p) = result(n, p) = result(n, m) = result(p, m)
+        = result(p, n) = 1 * c * val;
 
     return result;
 }

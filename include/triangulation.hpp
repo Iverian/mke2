@@ -16,13 +16,11 @@ public:
     static constexpr AbstractMatrix::Index N = DIM + 1;
     static constexpr AbstractMatrix::Index SN = DIM;
 
-    struct OnFirst {
-        bool on_sigma_1;
-        bool on_sigma_2;
-
+    class OnFirst : public std::array<bool, 2> {
+    public:
         operator bool() const noexcept
         {
-            return on_sigma_1 || on_sigma_2;
+            return (*this)[0] || (*this)[1];
         }
     };
 
@@ -33,12 +31,6 @@ public:
     public:
         Index index() const;
         const Point3d& point() const;
-
-        operator NodeContainer::const_pointer() const
-        {
-            return ptr;
-        }
-
         NodeContainer::const_pointer ptr;
     };
 
@@ -72,7 +64,7 @@ public:
 
     const std::array<double, DIM>& dim() const;
     const NodeContainer& nodes() const;
-    const std::vector<SurfaceElement>& triangles() const;
+    const std::vector<std::pair<Index, SurfaceElement>>& triangles() const;
     const std::vector<FiniteElement>& elems() const;
     const std::array<std::vector<NodePtr>, 2>& first() const;
     const std::vector<SurfaceElement>& third() const;
@@ -88,12 +80,14 @@ public:
 
     bool on_third(const SurfaceElement& e) const;
     OnFirst on_first(const NodePtr& n) const;
-    OnFirst coord_on_first(OnFirst node, Index coord) const;
+    OnFirst on_first(OnFirst cond, Index coord) const;
 
     friend std::ostream& operator<<(std::ostream& os,
                                     const Triangulation& obj);
 
     static Triangulation cuboid(std::array<double, DIM> dim, size_t scale);
+    static Triangulation from_msh(const char* filename,
+                                  std::array<double, DIM> dim);
 
 private:
     std::array<double, DIM> dim_;
@@ -101,7 +95,7 @@ private:
     Index size_;
     NodeContainer nodes_;
     std::vector<FiniteElement> elems_;
-    std::vector<SurfaceElement> triangles_;
+    std::vector<std::pair<Index, SurfaceElement>> triangles_;
     std::array<std::vector<NodePtr>, 2> first_;
     std::vector<SurfaceElement> third_;
 };
@@ -119,26 +113,6 @@ void Triangulation::append_elem(Args... args)
         }
     }
 }
-
-// struct Triangulation::NodePtr : Triangulation::NodeContainer::const_pointer
-// {
-//     Index index() const;
-// };
-
-// struct Triangulation::FiniteElement
-//     : std::array<Triangulation::NodePtr, Triangulation::N> {
-//     using Data = std::array<Point3d, N>;
-
-//     Data data() const;
-//     SurfaceElement face() const;
-// };
-
-// struct Triangulation::SurfaceElement
-//     : std::array<Triangulation::NodePtr, Triangulation::SN> {
-//     using Data = std::array<Point3d, N>;
-
-//     Data data() const;
-// };
 
 namespace std {
 

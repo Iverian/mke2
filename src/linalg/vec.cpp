@@ -43,7 +43,8 @@ Vec& Vec::operator/=(double rhs)
 
 bool operator==(const Vec& lhs, const Vec& rhs)
 {
-    return isnear(cdist(lhs, rhs), 0);
+    return lhs.size() == rhs.size()
+        && iszero(cdist(lhs, rhs), Tolerance::DOUBLE);
 }
 
 double cdist(const Vec& lhs, const Vec& rhs)

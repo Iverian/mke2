@@ -1,19 +1,19 @@
 #include <gtest/gtest.h>
 
+#include <csr_matrix.hpp>
 #include <debug.hpp>
 #include <dense_matrix.hpp>
-#include <sparse_matrix.hpp>
 
 #include <chrono>
 #include <random>
 
 using namespace std;
 
-static constexpr AbstractMatrix::Index N = 1000;
+static constexpr AbstractMatrix::Index N = 2000;
 
 TEST(TestSparse, test_modify)
 {
-    SparseMatrix a(N);
+    DokMatrix a(N);
     DenseMatrix b({N, N}, 0);
 
     default_random_engine eng;
@@ -37,57 +37,28 @@ TEST(TestSparse, test_modify)
             b(i, j) -= value;
         }
     }
-    a.remove_zeroes();
 
     for (AbstractMatrix::Index i = 0; i < N; ++i) {
         for (AbstractMatrix::Index j = 0; j < N; ++j) {
-            if (!isnear(a(i, j), b(i, j))) {
-                coutd << "seed=" << seed << ", i=" << i << ", j=" << j << endl;
-            }
             ASSERT_DOUBLE_EQ(a(i, j), b(i, j));
         }
     }
 
     SUCCEED();
 }
-
-TEST(TestSparse, test_clean_up)
-{
-    SparseMatrix a(N);
-
-    default_random_engine eng;
-    uniform_real_distribution<double> dr;
-    uniform_int_distribution<AbstractMatrix::Index> di(0, N - 1);
-
-    eng.seed(default_random_engine::result_type(
-        chrono::system_clock::now().time_since_epoch().count()));
-
-    for (auto count = 0; count < 2 * N; ++count) {
-        auto value = dr(eng);
-        auto i = di(eng);
-        auto j = di(eng);
-
-        a.add(i, j, value);
-        a.sub(i, j, value);
-    }
-    a.remove_zeroes();
-
-    ASSERT_EQ(a.non_zero(), 0);
-}
-
 TEST(TestSparse, test_solve_rand)
 {
-    SparseMatrix a(N);
+    DokMatrix da(N);
     Vec x(N, 0.);
 
     default_random_engine eng;
-    uniform_real_distribution<double> dr;
+    uniform_real_distribution<double> dr(-1., 1.);
     uniform_int_distribution<AbstractMatrix::Index> di(0, N - 1);
 
     eng.seed(default_random_engine::result_type(
         chrono::system_clock::now().time_since_epoch().count()));
     for (AbstractMatrix::Index i = 0; i < N; ++i) {
-        a.set(i, i, dr(eng));
+        da.set(i, i, dr(eng));
         x[i] = dr(eng);
     }
 
@@ -96,11 +67,11 @@ TEST(TestSparse, test_solve_rand)
         auto i = di(eng);
         auto j = di(eng);
 
-        a.add(i, j, value);
-        a.add(j, i, value);
+        da.add(i, j, value);
+        da.add(j, i, value);
     }
-    a.remove_zeroes();
 
+    CsrMatrix a(da);
     auto b = a * x;
     auto y = solve(a, b, Vec(N, 0.));
 
@@ -109,8 +80,8 @@ TEST(TestSparse, test_solve_rand)
 
 TEST(TestSparse, test_solve)
 {
-    SparseMatrix m(5, {1, 0, 0, 2, 0, 0, 4, 0, 1, 0, 0, 0, 3,
-                       0, 0, 2, 1, 0, 3, 1, 0, 0, 0, 1, 1});
+    CsrMatrix m(5, {1, 0, 0, 2, 0, 0, 4, 0, 1, 0, 0, 0, 3,
+                    0, 0, 2, 1, 0, 3, 1, 0, 0, 0, 1, 1});
     Vec x {1000, 2000, 100, 4000, 1};
     Vec x0 {0, 0, 0, 0, 0};
     auto b = m * x;

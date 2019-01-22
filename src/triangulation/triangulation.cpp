@@ -4,7 +4,9 @@
 #include <util.hpp>
 
 #include <algorithm>
+#include <fstream>
 #include <iterator>
+#include <string>
 #include <unordered_set>
 
 using namespace std;
@@ -39,7 +41,8 @@ const Triangulation::NodeContainer& Triangulation::nodes() const
     return nodes_;
 }
 
-const vector<Triangulation::SurfaceElement>& Triangulation::triangles() const
+const vector<pair<Triangulation::Index, Triangulation::SurfaceElement>>&
+Triangulation::triangles() const
 {
     return triangles_;
 }
@@ -66,11 +69,10 @@ Triangulation::NodePtr Triangulation::append_node(const Point3d& p)
     if (flag) {
         ++size_;
         auto first_flag = on_first(result);
-        if (first_flag.on_sigma_1) {
-            first_[0].push_back(result);
-        }
-        if (first_flag.on_sigma_2) {
-            first_[1].push_back(result);
+        for (Index i = 0; i < 2; ++i) {
+            if (first_flag[i]) {
+                first_[i].push_back(result);
+            }
         }
     }
 
@@ -134,28 +136,23 @@ bool Triangulation::on_third(const SurfaceElement& e) const
 
 Triangulation::OnFirst Triangulation::on_first(const NodePtr& n) const
 {
-    OnFirst result {false, false};
+    OnFirst result {{false, false}};
 
     auto& p = n.point();
-    // Sigma_1
-    if (isnear(p[0], 0) || isnear(p[0], dim_[0])) {
-        result.on_sigma_1 = true;
-    }
-    // Sigma_2
-    if (isnear(p[1], 0) || isnear(p[1], dim_[1])) {
-        result.on_sigma_2 = true;
+
+    for (Index i = 0; i < 2; ++i) {
+        if (iszero(p[i]) || isnear(p[i], dim_[i])) {
+            result[i] = true;
+        }
     }
 
     return result;
 }
 
-Triangulation::OnFirst Triangulation::coord_on_first(OnFirst node,
-                                                     Index coord) const
+Triangulation::OnFirst Triangulation::on_first(OnFirst cond, Index coord) const
 {
-
-    return {node.on_sigma_1
-                && (coord == Index(Coord::X) || coord == Index(Coord::Z)),
-            node.on_sigma_2 && (coord == Index(Coord::Y))};
+    return {{cond[0] && (coord == Index(Coord::X) || coord == Index(Coord::Z)),
+             cond[1] && (coord == Index(Coord::Y))}};
 }
 
 bool Triangulation::is_boundary(const SurfaceElement& e) const
@@ -178,19 +175,16 @@ bool Triangulation::is_boundary(const SurfaceElement& e) const
 
 void Triangulation::extract_triangles()
 {
-    unordered_set<SurfaceElement> unique;
-
-    for (auto& k : elems_) {
-        for (size_t i = 0; i < N; ++i) {
-            auto f = k.face(i);
+    auto p = elems_.size();
+    for (Index i = 0; i < p; ++i) {
+        auto& k = elems_[i];
+        for (Index j = 0; j < N; ++j) {
+            auto f = k.face(j);
             if (is_boundary(f)) {
-                unique.insert(f);
+                triangles_.emplace_back(i, move(f));
             }
         }
     }
-
-    triangles_.resize(unique.size());
-    copy(begin(unique), end(unique), begin(triangles_));
 }
 
 Triangulation Triangulation::cuboid(array<double, DIM> dim, size_t scale)
@@ -222,15 +216,26 @@ Triangulation Triangulation::cuboid(array<double, DIM> dim, size_t scale)
             for (Index k = 0; k < m[2]; ++k) {
                 auto z0 = k * s[2];
                 auto z1 = (k + 1) * s[2];
-
+                /*
+                 *  i xyz P
+                 *  0 000 A
+                 *  1 001 A1
+                 *  2 010 D
+                 *  3 011 D1
+                 *  4 100 B
+                 *  5 101 B1
+                 *  6 110 C
+                 *  7 111 C1
+                 */
                 auto p = result.append_nodes(
                     combine({x0, x1}, {y0, y1}, {z0, z1}));
-                result.append_elem(p[0], p[1], p[2], p[6]);
+
                 result.append_elem(p[0], p[1], p[4], p[6]);
-                result.append_elem(p[1], p[3], p[6], p[7]);
-                result.append_elem(p[1], p[5], p[6], p[7]);
-                result.append_elem(p[1], p[2], p[3], p[6]);
+                result.append_elem(p[0], p[1], p[2], p[6]);
                 result.append_elem(p[1], p[4], p[5], p[6]);
+                result.append_elem(p[1], p[5], p[6], p[7]);
+                result.append_elem(p[1], p[3], p[6], p[7]);
+                result.append_elem(p[1], p[2], p[3], p[6]);
             }
         }
     }
@@ -280,6 +285,64 @@ ostream& operator<<(ostream& os, const Triangulation& obj)
     os << "}";
 
     return os;
+}
+
+Triangulation Triangulation::from_msh(const char* filename,
+                                      array<double, DIM> dim)
+{
+    ifstream is(filename);
+    Triangulation result(dim);
+
+    string buf;
+    // skip useless strings
+    for (int i = 0; i < 4; ++i) {
+        getline(is, buf);
+    }
+    check_ifd(buf == "$Nodes", "Parsing error");
+
+    Index node_count = 0;
+    is >> node_count;
+
+    vector<NodePtr> nodes(node_count);
+
+    for (Index i = 0; i < node_count; ++i) {
+        Index ind = 0;
+        double x = 0., y = 0., z = 0.;
+
+        is >> ind >> x >> y >> z;
+        auto p = result.append_node({x, y, z});
+        nodes[i] = p;
+    }
+
+    // skip useless strings
+    for (int i = 0; i < 3; ++i) {
+        getline(is, buf);
+    }
+    check_ifd(buf == "$Elements", "Parsing error");
+
+    Index elem_count = 0;
+    is >> elem_count;
+
+    for (Index i = 0; i < elem_count; ++i) {
+        Index ind = 0, ele_type = 0;
+        is >> ind >> ele_type;
+        if (ele_type == 4) {
+            Index ntags, a, b, c, d = 0;
+            is >> ntags;
+            for (Index j = 0; j < ntags; ++j) {
+                Index tag = 0;
+                is >> tag;
+            }
+
+            is >> a >> b >> c >> d;
+            result.append_elem(nodes[a - 1], nodes[b - 1], nodes[c - 1],
+                               nodes[d - 1]);
+        } else {
+            getline(is, buf);
+        }
+    }
+
+    return result;
 }
 
 ostream& operator<<(ostream& os, const Triangulation::SurfaceElement& obj)

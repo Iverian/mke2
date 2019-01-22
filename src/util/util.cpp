@@ -11,6 +11,11 @@ bool isnear(double lhs, double rhs, Tolerance t)
     return fabs(lhs - rhs) < tol[size_t(t)];
 }
 
+bool iszero(double x, Tolerance t)
+{
+    return isnear(x, 0., t);
+}
+
 double sqr(double x)
 {
     return x * x;

@@ -6,7 +6,7 @@
 using namespace std;
 
 Point3d::Point3d(double x, double y, double z)
-    : Super{x, y, z}
+    : Super {x, y, z}
 {
 }
 
@@ -52,14 +52,13 @@ ostream& operator<<(ostream& os, const Point3d& obj)
 
 bool operator==(const Point3d& lhs, const Point3d& rhs)
 {
-    auto result = true;
+    double max = 0;
     for (size_t i = 0; i < lhs.size(); ++i) {
-        if (!isnear(lhs[i], rhs[i], Tolerance::DOUBLE)) {
-            result = false;
-            break;
+        if (auto cur = fabs(rhs[i] - lhs[i]); cur > max) {
+            max = cur;
         }
     }
-    return result;
+    return iszero(max, Tolerance::DOUBLE);
 }
 
 bool operator!=(const Point3d& lhs, const Point3d& rhs)

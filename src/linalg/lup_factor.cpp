@@ -41,7 +41,7 @@ LupFactor& LupFactor::factor()
                 imax = k;
             }
 
-        check_if(!isnear(mmax, 0), "Matrix is not inverible");
+        check_if(!iszero(mmax), "Matrix is not inverible");
 
         if (imax != i) {
             swap(pivot_[i], pivot_[imax]);

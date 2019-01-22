@@ -166,13 +166,14 @@ bool operator==(const DenseMatrix& lhs, const DenseMatrix& rhs)
 {
     auto result = lhs.shape_ == rhs.shape_;
     if (result) {
+        double max = 0;
         auto s = lhs.size();
         for (DenseMatrix::Index i = 0; i < s; ++i) {
-            if (!isnear(lhs[i], rhs[i], Tolerance::DOUBLE)) {
-                result = false;
-                break;
+            if (auto cur = fabs(rhs[i] - lhs[i]); cur > max) {
+                max = cur;
             }
         }
+        result = iszero(max, Tolerance::DOUBLE);
     }
     return result;
 }

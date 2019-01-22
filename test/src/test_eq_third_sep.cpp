@@ -11,7 +11,7 @@
 
 using namespace std;
 
-struct TestEq1 : ::testing::Test {
+struct TestEqThirdSep : ::testing::Test {
     struct Data {
         Data()
             : t(Triangulation::cuboid({200, 40, 40}, 4))
@@ -22,7 +22,7 @@ struct TestEq1 : ::testing::Test {
 
         Triangulation t;
         LocalEqV17 gen;
-        pair<SparseMatrix, Vec> glob;
+        pair<CsrMatrix, Vec> glob;
     };
 
 protected:
@@ -39,11 +39,11 @@ protected:
     unique_ptr<Data> d;
 };
 
-TEST_F(TestEq1, test_symmetric)
+TEST_F(TestEqThirdSep, test_symmetric)
 {
     auto& mat = d->glob.first;
 
-    for (SparseMatrix::Index i = 0; i < mat.shape().m; ++i) {
+    for (CsrMatrix::Index i = 0; i < mat.shape().m; ++i) {
         auto k = mat.indptr()[i];
         auto last = mat.indptr()[i + 1];
 
@@ -59,37 +59,26 @@ TEST_F(TestEq1, test_symmetric)
     SUCCEED();
 }
 
-TEST_F(TestEq1, test_zero_rows)
+TEST_F(TestEqThirdSep, test_zero_rows)
 {
     auto& mat = d->glob.first;
 
-    for (SparseMatrix::Index i = 0; i < mat.shape().m; ++i) {
+    for (CsrMatrix::Index i = 0; i < mat.shape().m; ++i) {
         auto first = mat.indptr()[i];
         auto last = mat.indptr()[i + 1];
 
-        auto cond = (first < last) || !isnear(mat.diag()[i], 0);
-        if (!cond) {
-            coutd << "i=" << i;
-        }
-        ASSERT_TRUE(cond);
+        ASSERT_TRUE(first < last);
     }
 
     SUCCEED();
 }
 
-TEST_F(TestEq1, test_zero_cols)
+TEST_F(TestEqThirdSep, test_zero_cols)
 {
     auto& mat = d->glob.first;
     auto m = mat.shape().m;
     vector<bool> nonzero(m, false);
     size_t count = 0;
-
-    for (AbstractMatrix::Index j = 0; j < m; ++j) {
-        if (!isnear(mat.diag()[j], 0)) {
-            nonzero[j] = true;
-            ++count;
-        }
-    }
 
     for (auto& j : mat.indices()) {
         if (count >= m) {
@@ -105,7 +94,7 @@ TEST_F(TestEq1, test_zero_cols)
     ASSERT_EQ(count, m);
 }
 
-TEST_F(TestEq1, test_positive)
+TEST_F(TestEqThirdSep, test_positive)
 {
     auto& mat = d->glob.first;
     auto m = mat.shape().m;
@@ -128,7 +117,7 @@ TEST_F(TestEq1, test_positive)
     }
 }
 
-TEST_F(TestEq1, strict_first_boundary_condition)
+TEST_F(TestEqThirdSep, strict_first_boundary_condition)
 {
     auto& t = d->t;
     auto& [mat, vec] = d->glob;
@@ -142,8 +131,17 @@ TEST_F(TestEq1, strict_first_boundary_condition)
 
             auto a = mat.indptr()[gnp];
             auto b = mat.indptr()[gnp + 1];
-            ASSERT_EQ(a, b);
-            ASSERT_DOUBLE_EQ(mat.diag()[gnp], 1);
+
+            ASSERT_EQ(b - a, 1);
+            ASSERT_DOUBLE_EQ(vec[gnp], 0);
+            ASSERT_DOUBLE_EQ(mat.data()[a], 1);
+
+            for (CsrMatrix::Index j = 0; j < m; ++j) {
+                if (gnp == j) {
+                    continue;
+                }
+                ASSERT_DOUBLE_EQ(mat(gnp, j), 0.);
+            }
         }
     }
 
@@ -155,8 +153,17 @@ TEST_F(TestEq1, strict_first_boundary_condition)
 
             auto a = mat.indptr()[gnp];
             auto b = mat.indptr()[gnp + 1];
-            ASSERT_EQ(a, b);
-            ASSERT_DOUBLE_EQ(mat.diag()[gnp], 1);
+
+            ASSERT_EQ(b - a, 1);
+            ASSERT_DOUBLE_EQ(vec[gnp], 0);
+            ASSERT_DOUBLE_EQ(mat.data()[a], 1);
+
+            for (CsrMatrix::Index j = 0; j < m; ++j) {
+                if (gnp == j) {
+                    continue;
+                }
+                ASSERT_DOUBLE_EQ(mat(gnp, j), 0.);
+            }
         }
     }
 }

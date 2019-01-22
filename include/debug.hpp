@@ -7,20 +7,26 @@
 #include <stdexcept>
 
 #ifdef NDEBUG
-#define DEBUG_FLAG false
-#define DBG if (false)
-#else
-#define DEBUG_FLAG true
-#define DBG if (true)
-#endif
+
+#define NOEXCEPTD noexcept
+static constexpr auto debug_flag = false;
+
+#else // NDEBUG
+
+#define NOEXCEPTD
+static constexpr auto debug_flag = true;
+
+#endif // NDEBUG
+
+#define DBG if (debug_flag)
 
 #define cerrd                                                                 \
-    if (!DEBUG_FLAG) {                                                        \
+    if (!debug_flag) {                                                        \
     } else                                                                    \
         std::cerr
 
 #define coutd                                                                 \
-    if (!DEBUG_FLAG) {                                                        \
+    if (!debug_flag) {                                                        \
     } else                                                                    \
         std::cout
 
@@ -32,13 +38,6 @@
         throw std::runtime_error(what);                                       \
     } while (0)
 
-#define exit_fmt(fmt_string, ...)                                             \
-    do {                                                                      \
-        fprintf_s(stderr, "CRITICAL: (%s:%d) " fmt_string, __FILE__,          \
-                  __LINE__, ##__VA_ARGS__);                                   \
-        std::exit(1);                                                         \
-    } while (0)
-
 #define check_if(condition, fmt_string, ...)                                  \
     do {                                                                      \
         if (!(condition)) {                                                   \
@@ -46,11 +45,21 @@
         }                                                                     \
     } while (0)
 
+#ifdef NDEBUG
+
+#define debug_fmt(fmt_string, ...)
+#define check_ifd(condition, fmt_string, ...)
+
+#else // NDEBUG
+
 #define debug_fmt(fmt_string, ...)                                            \
     do {                                                                      \
-        if (DEBUG_FLAG) {                                                     \
-            fprintf_s(stderr, fmt_string, ##__VA_ARGS__);                     \
-        }                                                                     \
+        fprintf_s(stderr, fmt_string, ##__VA_ARGS__);                         \
     } while (0)
+
+#define check_ifd(condition, fmt_string, ...)                                 \
+    check_if(condition, fmt_string, ##__VA_ARGS__)
+
+#endif // NDEBUG
 
 #endif // MKE2_INCLUDE_DEBUG_HPP_
