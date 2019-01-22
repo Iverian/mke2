@@ -1,5 +1,5 @@
-#ifndef MKE2_INCLUDE_LOCAL_EQ_V17_HPP
-#define MKE2_INCLUDE_LOCAL_EQ_V17_HPP
+#ifndef MKE2_INCLUDE_LOCAL_EQ_GEN_HPP
+#define MKE2_INCLUDE_LOCAL_EQ_GEN_HPP
 
 #include "abstract_local_eq.hpp"
 
@@ -14,4 +14,4 @@ public:
 LocalEqGen::result_type v17(const Triangulation& t,
                             const Triangulation::FiniteElement& elem);
 
-#endif // MKE2_INCLUDE_LOCAL_EQ_V17_HPP
+#endif // MKE2_INCLUDE_LOCAL_EQ_GEN_HPP

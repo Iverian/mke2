@@ -2,7 +2,7 @@
 #include <debug.hpp>
 #include <export.hpp>
 #include <global_eq_builder.hpp>
-#include <local_eq_v17.hpp>
+#include <local_eq_gen.hpp>
 #include <triangulation.hpp>
 
 #include <chrono>

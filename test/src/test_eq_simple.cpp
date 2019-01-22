@@ -2,7 +2,7 @@
 
 #include <global_eq_builder.hpp>
 #include <global_indices.hpp>
-#include <local_eq_v17.hpp>
+#include <local_eq_gen.hpp>
 #include <triangulation.hpp>
 #include <util.hpp>
 

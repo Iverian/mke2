@@ -1,4 +1,4 @@
-#include "local_eq_v17.hpp"
+#include "local_eq_gen.hpp"
 #include "constants.hpp"
 
 #include <debug.hpp>
