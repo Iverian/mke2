@@ -36,7 +36,11 @@ Vec solve(const CsrMatrix& lhs, const Vec& rhs, Vec x0)
     Vec q(m, 0.);
     Vec p(m, 0.);
 
-    double res = 0, u = 1, a = 1, w = 1, b = 0;
+    double mdiff = numeric_limits<double>::max();
+    size_t mind = 0;
+    bool success = false;
+
+    double pdiff = 0, diff = 0, res = 0, u = 1, a = 1, w = 1, b = 0;
     do {
         auto up = u;
         u = dot(r0, r);
@@ -55,25 +59,41 @@ Vec solve(const CsrMatrix& lhs, const Vec& rhs, Vec x0)
         dot(t, lhs, s);
         w = dot(t, s) / sqr(t);
 
+        cax_y(r, -w, t, s);
+        res = sqrt(sqr(r) / rsqr);
+        if (!isfinite(res)) {
+            break;
+        }
+        // if (iszero(res, Tolerance::TRIPLE)) {
+        //     success = true;
+        //     break;
+        // }
+
         // x = a * p + w * s + x
         cax_by_z(x, a, p, w, s, x);
         // r = s - w * t
-        cax_y(r, -w, t, s);
 
-        res = sqrt(sqr(r) / rsqr);
-        if (iszero(res, Tolerance::TRIPLE)) {
+        dot(y, lhs, x);
+        pdiff = diff;
+        diff = cdist(y, rhs);
+        if (diff < mdiff) {
+            mdiff = diff;
+            mind = step;
+        }
+        if (iszero(diff)) {
+            success = true;
             break;
         }
     } while (++step < max_iter);
 
-    auto diff = sqrt(sqr(lhs * x - rhs));
-    if (step != max_iter) {
+    // diff = sqrt(sqr(lhs * x - rhs));
+    if (success) {
         cout << "Iteration converged";
     } else {
         cout << "Iteration did not converge";
     }
     cout << ": res=" << res << ", |Ax - b|=" << diff << ", step=" << step
-         << endl;
+         << ", mind=" << mind << endl;
 
     return x;
 }

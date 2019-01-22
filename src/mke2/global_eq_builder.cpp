@@ -78,102 +78,65 @@ pair<CsrMatrix, Vec> build_global_system(const Triangulation& t,
     return {CsrMatrix(mat), vec};
 }
 
-pair<CsrMatrix, Vec> build_global_system(const Triangulation& t,
-                                         AbstractLocalEq& gen)
+pair<DenseMatrix, Vec> build_global_system_dense(const Triangulation& t,
+                                                 LocalEqGen gen)
 {
-    const auto m = Index(t.nodes().size());
-
-    DokMatrix mat(Triangulation::DIM * m);
+    auto m = Index(t.nodes().size());
+    DenseMatrix mat({Triangulation::DIM * m, Triangulation::DIM * m}, 0.);
     Vec vec(Triangulation::DIM * m, 0.);
 
-    // Сборка правой части СЛАУ
+    // Учет ГУ 1го рода
+    for (auto& fc : t.first()) {
+        for (auto& n : fc) {
+            auto gn = n.index();
+            auto cn = t.on_first(n);
+
+            for (Index p = 0; p < Triangulation::DIM; ++p) {
+                auto cnp = t.on_first(cn, p);
+
+                if (cnp) {
+                    auto gnp = _g(gn, p, m);
+
+                    vec[gnp] = 0.;
+                    mat(gnp, gnp) = 1.;
+                }
+            }
+        }
+    }
+
+    // Основная часть формирования СЛАУ
     for (auto& k : t.elems()) {
-        const auto kvec = gen.get_internal(k.data()).second;
+        const auto [kmat, kvec] = gen(t, k);
 
         for (Index i = 0; i < Triangulation::N; ++i) {
             const auto gi = k[i].index();
+            const auto ci = t.on_first(k[i]);
 
             for (Index p = 0; p < Triangulation::DIM; ++p) {
-                vec[_g(gi, p, m)] += kvec[_v(i, p)];
-            }
-        }
-    }
+                const auto cip = t.on_first(ci, p);
 
-    // Учет ГУ 3го рода
-    for (auto& s : t.third()) {
-        const auto [smat, svec] = gen.get_boundary(s.data());
-
-        for (Index i = 0; i < Triangulation::SN; ++i) {
-            const auto gi = s[i].index();
-
-            for (Index j = 0; j < Triangulation::SN; ++j) {
-                const auto gj = s[j].index();
-
-                for (Index p = 0; p < Triangulation::DIM; ++p) {
-                    const auto gip = _g(gi, p, m);
-
-                    for (Index q = 0; q < Triangulation::DIM; ++q) {
-                        const auto gjq = _g(gj, q, m);
-                        const auto v = smat(_s(i, p), _s(j, q));
-
-                        mat.add(gip, gjq, v);
-                    }
+                if (!cip) {
+                    vec[_g(gi, p, m)] += kvec[_v(i, p)];
                 }
             }
 
-            for (Index p = 0; p < Triangulation::DIM; ++p) {
-                vec[_g(gi, p, m)] += svec[_s(i, p)];
-            }
-        }
-    }
-
-    // Учет ГУ 1го рода
-    // Sigma_1 u_x = u_z = 0
-    for (auto& n : t.first()[0]) {
-        auto gn = n.index();
-
-        for (auto p : {Coord::X, Coord::Z}) {
-            auto gnp = _g(gn, p, m);
-
-            vec[gnp] = 0;
-            mat.set(gnp, gnp, 1);
-        }
-    }
-    // Sigma_2 u_y = 0
-    for (auto& n : t.first()[1]) {
-        auto gnp = _g(n.index(), Coord::Y, m);
-
-        vec[gnp] = 0;
-        mat.set(gnp, gnp, 1);
-    }
-
-    // Основной цикл сборки СЛАУ
-    for (auto& k : t.elems()) {
-        const auto kmat = gen.get_internal(k.data()).first;
-
-        for (Index i = 0; i < Triangulation::N; ++i) {
-            auto gi = k[i].index();
-            auto ci = t.on_first(k[i]);
-
             for (Index j = 0; j < Triangulation::N; ++j) {
-                auto gj = k[j].index();
-                auto cj = t.on_first(k[j]);
+                const auto gj = k[j].index();
+                const auto cj = t.on_first(k[j]);
 
                 for (Index p = 0; p < Triangulation::DIM; ++p) {
-                    auto cip = t.on_first(ci, p);
+                    const auto cip = t.on_first(ci, p);
 
                     if (!cip) {
-                        auto gip = _g(gi, p, m);
+                        const auto gip = _g(gi, p, m);
 
                         for (Index q = 0; q < Triangulation::DIM; ++q) {
-                            auto gjq = _g(gj, q, m);
-                            auto val = kmat(_v(i, p), _v(j, q));
+                            const auto gjq = _g(gj, q, m);
+                            const auto val = kmat(_v(i, p), _v(j, q));
 
-                            auto cjq = t.on_first(cj, q);
+                            const auto cjq = t.on_first(cj, q);
                             if (!cjq) {
-                                mat.add(gip, gjq, val);
-                            } else {
-                                vec[gip] -= val * vec[gjq];
+                                mat(gip, gjq) += val;
                             }
                         }
                     }
@@ -182,7 +145,7 @@ pair<CsrMatrix, Vec> build_global_system(const Triangulation& t,
         }
     }
 
-    return {CsrMatrix(mat), vec};
+    return {mat, vec};
 }
 
 // if (!t.on_first(k[i])) {

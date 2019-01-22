@@ -109,6 +109,12 @@ Triangulation::SurfaceElement::Data Triangulation::SurfaceElement::data() const
     return {(*this)[0].point(), (*this)[1].point(), (*this)[2].point()};
 }
 
+double Triangulation::SurfaceElement::area() const
+{
+    auto d = data();
+    return norm(cross(d[0] - d[2], d[1] - d[2])) / 2.;
+}
+
 Triangulation::SurfaceElement Triangulation::FiniteElement::face(Index i) const
 {
     return SurfaceElement(
@@ -118,12 +124,21 @@ Triangulation::SurfaceElement Triangulation::FiniteElement::face(Index i) const
 Triangulation::FiniteElement::FiniteElement(const Super& data)
     : Super(data)
 {
+    if (volume() < 0) {
+        ::swap((*this)[0], (*this)[3]);
+    }
 }
 
 Triangulation::FiniteElement::Data Triangulation::FiniteElement::data() const
 {
     return {(*this)[0].point(), (*this)[1].point(), (*this)[2].point(),
             (*this)[3].point()};
+}
+
+double Triangulation::FiniteElement::volume() const
+{
+    auto d = data();
+    return triple(d[0] - d[3], d[1] - d[3], d[2] - d[3]) / 6.;
 }
 
 bool Triangulation::on_third(const SurfaceElement& e) const
@@ -186,61 +201,58 @@ void Triangulation::extract_triangles()
         }
     }
 }
-
-Triangulation Triangulation::cuboid(array<double, DIM> dim, size_t scale)
+Triangulation Triangulation::cuboid(std::array<double, DIM> dim,
+                                    std::array<Index, DIM> size)
 {
     Triangulation result(dim);
 
-    array<Index, DIM> m;
-    array<double, DIM> s;
-    auto mind = *min_element(begin(dim), end(dim));
-
-    if (scale == 0) {
-        scale = 1;
-    }
-
+    array<double, DIM> step;
     for (Index i = 0; i < DIM; ++i) {
-        m[i] = scale * Index(dim[i] / mind);
-        s[i] = dim[i] / m[i];
+        step[i] = dim[i] / size[i];
     }
 
-    result.elems_.reserve(6 * m[0] * m[1] * m[2]);
-    for (Index i = 0; i < m[0]; ++i) {
-        auto x0 = i * s[0];
-        auto x1 = (i + 1) * s[0];
+    result.elems_.reserve(6 * size[0] * size[1] * size[2]);
+    for (Index i = 0; i < size[0]; ++i) {
+        auto x0 = i * step[0];
+        auto x1 = (i + 1) * step[0];
 
-        for (Index j = 0; j < m[1]; ++j) {
-            auto y0 = j * s[1];
-            auto y1 = (j + 1) * s[1];
+        for (Index j = 0; j < size[1]; ++j) {
+            auto y0 = j * step[1];
+            auto y1 = (j + 1) * step[1];
 
-            for (Index k = 0; k < m[2]; ++k) {
-                auto z0 = k * s[2];
-                auto z1 = (k + 1) * s[2];
-                /*
-                 *  i xyz P
-                 *  0 000 A
-                 *  1 001 A1
-                 *  2 010 D
-                 *  3 011 D1
-                 *  4 100 B
-                 *  5 101 B1
-                 *  6 110 C
-                 *  7 111 C1
-                 */
+            for (Index k = 0; k < size[2]; ++k) {
+                auto z0 = k * step[2];
+                auto z1 = (k + 1) * step[2];
+
                 auto p = result.append_nodes(
                     combine({x0, x1}, {y0, y1}, {z0, z1}));
 
-                result.append_elem(p[0], p[1], p[4], p[6]);
-                result.append_elem(p[0], p[1], p[2], p[6]);
-                result.append_elem(p[1], p[4], p[5], p[6]);
-                result.append_elem(p[1], p[5], p[6], p[7]);
-                result.append_elem(p[1], p[3], p[6], p[7]);
+                result.append_elem(p[1], p[0], p[2], p[6]);
+                result.append_elem(p[1], p[0], p[4], p[6]);
                 result.append_elem(p[1], p[2], p[3], p[6]);
+                result.append_elem(p[1], p[3], p[7], p[6]);
+                result.append_elem(p[1], p[4], p[5], p[6]);
+                result.append_elem(p[1], p[5], p[7], p[6]);
             }
         }
     }
 
     return result;
+}
+
+Triangulation Triangulation::cuboid(array<double, DIM> dim, Index scale)
+{
+    if (scale == 0) {
+        scale = 1;
+    }
+
+    array<Index, DIM> m;
+    auto mind = *min_element(begin(dim), end(dim));
+    for (Index i = 0; i < DIM; ++i) {
+        m[i] = scale * Index(dim[i] / mind);
+    }
+
+    return cuboid(dim, m);
 }
 
 ostream& operator<<(ostream& os, const Triangulation& obj)

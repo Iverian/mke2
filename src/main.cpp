@@ -4,6 +4,7 @@
 #include <global_eq_builder.hpp>
 #include <local_eq_gen.hpp>
 #include <triangulation.hpp>
+#include <lup_factor.hpp>
 
 #include <chrono>
 #include <fstream>
@@ -11,36 +12,34 @@
 #include <memory>
 #include <stdexcept>
 
-// #define THIRD_SEP
-// #define CHEAT_MESH
+// #define DENSE_SOLVE
 
 using namespace std;
 
 static constexpr auto xdim = 200.;
 static constexpr auto ydim = 40.;
 static constexpr auto zdim = 40.;
-static constexpr auto init = 0.;
-static constexpr size_t scale = 2;
+static constexpr size_t scale = 10;
 
 int main(int argc, char const* argv[])
 {
     try {
-#ifndef CHEAT_MESH
+        double init = 0;
+        if (argc > 2) {
+            init = atof(argv[2]);
+        }
         auto t = Triangulation::cuboid({xdim, ydim, zdim}, scale);
-#else  // CHEAT_MESH
-        auto t = Triangulation::from_msh("brick.msh", {xdim, ydim, zdim});
-#endif // CHEAT_MESH
 
-#ifdef THIRD_SEP
-        LocalEqV17 gen;
-        auto glob = build_global_system(t, gen);
-#else
-        auto glob = build_global_system(t, LocalEqGen(v17));
-#endif
         auto start = chrono::high_resolution_clock::now();
 
-        auto x0 = Vec(glob.second.size(), init);
-        auto res = solve(glob.first, glob.second, move(x0));
+#ifndef DENSE_SOLVE
+        auto [mat, vec] = build_global_system(t, LocalEqGen(gen_local));
+        auto x0 = Vec(vec.size(), init);
+        auto res = solve(mat, vec, move(x0));
+#else  // DENSE_SOLVE
+        auto [mat, vec] = build_global_system_dense(t, LocalEqGen(gen_local));
+        auto res = LupFactor(mat).factor().solve(vec);
+#endif // DENSE_SOLVE
 
         auto finish = chrono::high_resolution_clock::now();
         cout << "Iteration finished in "

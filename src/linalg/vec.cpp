@@ -51,10 +51,9 @@ double cdist(const Vec& lhs, const Vec& rhs)
 {
     check_if(lhs.size() == rhs.size(), "Dimensions are not equal");
 
-    double cur, max = 0;
+    double max = 0;
     for (size_t i = 0; i < lhs.size(); ++i) {
-        cur = fabs(rhs[i] - lhs[i]);
-        if (cur > max) {
+        if (auto cur = fabs(rhs[i] - lhs[i]); cur > max) {
             max = cur;
         }
     }

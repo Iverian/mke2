@@ -19,8 +19,6 @@ class V17InternalGen {
 
 public:
     explicit V17InternalGen(const Triangulation::FiniteElement::Data& data);
-
-    double vk() const;
     DenseMatrix gk() const;
     DenseMatrix internal(double val) const;
 
@@ -45,7 +43,6 @@ class V17Gen {
 public:
     V17Gen(const Triangulation& t, const Triangulation::FiniteElement& elem);
 
-    double vk() const;
     DenseMatrix gk() const;
     DenseMatrix internal(double val) const;
     DenseMatrix boundary(double val) const;
@@ -53,46 +50,32 @@ public:
                          double val) const;
 };
 
-LocalEqV17::Result
-LocalEqV17::get_internal(Triangulation::FiniteElement::Data elem) const
+// Генератор, совмещающий матрицу по границе и по объему
+LocalEqGen::result_type gen_local(const Triangulation& t,
+                            const Triangulation::FiniteElement& elem)
 {
-    V17InternalGen g(elem);
+    V17Gen gen(t, elem);
 
-    auto vk = g.vk();
+    auto vk = elem.volume();
     auto e3 = DenseMatrix::eye(Triangulation::DIM);
-    auto s0 = kroneker_product(g.internal(vk * cnst::rho / 120), e3);
+    auto s0 = kroneker_product(gen.internal(vk * cnst::rho / 20), e3);
+    auto sb = kroneker_product(gen.boundary(1. / 24), e3);
 
-    auto mat = (vk / 6) * g.gk() - sqr(cnst::omega) * s0;
-    auto vec = Vec(Triangulation::DIM * Triangulation::N, 0.);
+    Vec tk(Triangulation::DIM * Triangulation::N, 0.);
+    for (Index i = 0; i < Triangulation::N; ++i) {
+        tk[_v(i, Coord::Z)] = -cnst::p;
+    }
+
+    auto mat = vk * gen.gk() - sqr(cnst::omega) * s0 + cnst::mu * sb;
+    auto vec = sb * tk;
 
     return {mat, vec};
 }
 
-LocalEqV17::Result
-LocalEqV17::get_boundary(Triangulation::SurfaceElement::Data elem) const
-{
-    V17SurfaceGen g(elem);
-
-    Vec tk(Triangulation::DIM * Triangulation::SN, 0.);
-    for (Index i = 0; i < Triangulation::SN; ++i) {
-        tk[_s(i, Coord::Z)] = -cnst::p;
-    }
-
-    auto e3 = DenseMatrix::eye(Triangulation::DIM);
-    auto mat = kroneker_product(g.boundary(1. / 24), e3);
-    auto vec = mat * tk;
-
-    return {mat * cnst::mu, vec};
-}
 
 V17InternalGen::V17InternalGen(const Triangulation::FiniteElement::Data& data_)
     : data(data_)
 {
-}
-
-double V17InternalGen::vk() const
-{
-    return triple(data[0] - data[3], data[1] - data[3], data[2] - data[3]);
 }
 
 DenseMatrix V17InternalGen::dq() const
@@ -161,28 +144,6 @@ DenseMatrix V17SurfaceGen::boundary(double val) const
     return result;
 }
 
-// Генератор, совмещающий матрицу по границе и по объему
-LocalEqGen::result_type v17(const Triangulation& t,
-                            const Triangulation::FiniteElement& elem)
-{
-    V17Gen gen(t, elem);
-
-    auto vk = gen.vk();
-    auto e3 = DenseMatrix::eye(Triangulation::DIM);
-    auto s0 = kroneker_product(gen.internal(vk * cnst::rho / 120), e3);
-    auto sb = kroneker_product(gen.boundary(1. / 24), e3);
-
-    Vec tk(Triangulation::DIM * Triangulation::N, 0.);
-    for (Index i = 0; i < Triangulation::N; ++i) {
-        tk[_v(i, Coord::Z)] = -cnst::p;
-    }
-
-    auto mat = vk * gen.gk() / 6 - sqr(cnst::omega) * s0 + cnst::mu * sb;
-    auto vec = sb * tk;
-
-    return make_pair(mat, vec);
-}
-
 V17Gen::V17Gen(const Triangulation& t_,
                const Triangulation::FiniteElement& elem_)
     : t(t_)
@@ -190,12 +151,6 @@ V17Gen::V17Gen(const Triangulation& t_,
     , igen(elem_.data())
 {
 }
-
-double V17Gen::vk() const
-{
-    return igen.vk();
-}
-
 DenseMatrix V17Gen::internal(double val) const
 {
     return igen.internal(val);
@@ -216,13 +171,11 @@ DenseMatrix V17Gen::boundary(double val) const
 DenseMatrix V17Gen::boundary(const Triangulation::SurfaceElement& face,
                              Index i, double val) const
 {
-    auto data = face.data();
-
     DenseMatrix result({4, 4}, 0.);
     auto m = (i + 1) % Triangulation::N;
     auto n = (i + 2) % Triangulation::N;
     auto p = (i + 3) % Triangulation::N;
-    auto c = norm(cross(data[0] - data[2], data[1] - data[2]));
+    auto c = 2 * face.area();
 
     result(m, m) = result(n, n) = result(p, p) = 2 * c * val;
     result(m, n) = result(m, p) = result(n, p) = result(n, m) = result(p, m)

@@ -15,7 +15,7 @@ struct TestEqSimple : ::testing::Test {
     struct Data {
         Data()
             : t(Triangulation::cuboid({200, 40, 40}, 4))
-            , glob(build_global_system(t, LocalEqGen(v17)))
+            , glob(build_global_system(t, LocalEqGen(gen_local)))
         {
         }
 

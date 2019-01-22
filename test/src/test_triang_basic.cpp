@@ -14,7 +14,7 @@ TEST(TestTriangBasic, test_tetra)
                              Point3d {0, 1, 0}, Point3d {1, 0, 0}});
     t.append_elem(p[0], p[1], p[2], p[3]);
 
-    auto [mat, vec] = build_global_system(t, LocalEqGen(v17));
+    auto [mat, vec] = build_global_system(t, LocalEqGen(gen_local));
 
     for (CsrMatrix::Index i = 0; i < mat.shape().m; ++i) {
         auto a = mat.indptr()[i];

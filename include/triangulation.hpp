@@ -41,6 +41,7 @@ public:
         SurfaceElement(const Super& data = Super());
 
         Data data() const;
+        double area() const;
 
         friend std::ostream& operator<<(std::ostream& os,
                                         const SurfaceElement& obj);
@@ -53,6 +54,7 @@ public:
         FiniteElement(const Super& data = Super());
 
         Data data() const;
+        double volume() const;
         SurfaceElement face(Index i) const;
 
         friend std::ostream& operator<<(std::ostream& os,
@@ -74,7 +76,6 @@ public:
 
     template <class... Args>
     void append_elem(Args... args);
-
     bool is_boundary(const SurfaceElement& e) const;
     void extract_triangles();
 
@@ -85,7 +86,9 @@ public:
     friend std::ostream& operator<<(std::ostream& os,
                                     const Triangulation& obj);
 
-    static Triangulation cuboid(std::array<double, DIM> dim, size_t scale);
+    static Triangulation cuboid(std::array<double, DIM> dim,
+                                std::array<Index, DIM> size);
+    static Triangulation cuboid(std::array<double, DIM> dim, Index scale);
     static Triangulation from_msh(const char* filename,
                                   std::array<double, DIM> dim);
 

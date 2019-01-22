@@ -8,7 +8,7 @@ using namespace std;
 
 DenseMatrix::DenseMatrix()
     : Super()
-    , shape_ {0, 0}
+    , shape_{0, 0}
 {
 }
 
