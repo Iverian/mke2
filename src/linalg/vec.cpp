@@ -47,17 +47,20 @@ bool operator==(const Vec& lhs, const Vec& rhs)
         && iszero(cdist(lhs, rhs), Tolerance::DOUBLE);
 }
 
-double cdist(const Vec& lhs, const Vec& rhs)
+double cnorm(const Vec& lhs)
 {
-    check_if(lhs.size() == rhs.size(), "Dimensions are not equal");
-
     double max = 0;
-    for (size_t i = 0; i < lhs.size(); ++i) {
-        if (auto cur = fabs(rhs[i] - lhs[i]); cur > max) {
+    for (auto& xi : lhs) {
+        if (auto cur = fabs(xi); cur > max) {
             max = cur;
         }
     }
     return max;
+}
+
+double cdist(const Vec& lhs, const Vec& rhs)
+{
+    return cnorm(rhs - lhs);
 }
 
 bool operator!=(const Vec& lhs, const Vec& rhs)

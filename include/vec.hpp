@@ -27,8 +27,10 @@ public:
     friend Vec operator/(const Vec& lhs, double rhs);
 
     friend double dot(const Vec& lhs, const Vec& rhs);
+    friend double cnorm(const Vec& lhs);
     friend double cdist(const Vec& lhs, const Vec& rhs);
     friend double sqr(const Vec& obj);
+
 };
 
 #endif // MKE2_INCLUDE_VEC_HPP_
