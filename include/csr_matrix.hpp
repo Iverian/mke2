@@ -1,5 +1,5 @@
-#ifndef MKE2_INCLUDE_SPARCE_MATRIX_HPP_
-#define MKE2_INCLUDE_SPARCE_MATRIX_HPP_
+#ifndef MKE2_INCLUDE_CSR_MATRIX_HPP_
+#define MKE2_INCLUDE_CSR_MATRIX_HPP_
 
 #include <array>
 #include <iostream>
@@ -27,6 +27,7 @@ public:
     Shape shape() const override;
     Index non_zero() const;
 
+    const DataContainer& diag() const noexcept;
     const DataContainer& data() const noexcept;
     const IndexContainer& indptr() const noexcept;
     const IndexContainer& indices() const noexcept;
@@ -38,13 +39,15 @@ public:
     friend void dot(Vec& result, const Vec& lhs, const CsrMatrix& rhs);
 
     friend Vec solve(const CsrMatrix& lhs, const Vec& rhs, Vec x0);
+    friend Vec psolve(const CsrMatrix& lhs, const Vec& rhs, Vec x0);
     friend std::ostream& operator<<(std::ostream& os, const CsrMatrix& obj);
 
 private:
+    DataContainer diag_;
     DataContainer data_;
     IndexContainer indptr_;
     IndexContainer indices_;
     Index m_;
 };
 
-#endif // MKE2_INCLUDE_SPARCE_MATRIX_HPP_
+#endif // MKE2_INCLUDE_CSR_MATRIX_HPP_

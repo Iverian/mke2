@@ -22,7 +22,8 @@ CsrMatrix::CsrMatrix()
 #define _(i, j) ((i) * (m_) + (j))
 
 CsrMatrix::CsrMatrix(Index side, const DataContainer& vals)
-    : data_()
+    : diag_(side)
+    , data_()
     , indptr_(side + 1)
     , indices_()
     , m_(side)
@@ -32,9 +33,13 @@ CsrMatrix::CsrMatrix(Index side, const DataContainer& vals)
             for (Index j = 0; j < m_; ++j) {
                 auto& v = vals[_(i, j)];
                 if (!iszero(v)) {
-                    data_.emplace_back(v);
-                    indices_.emplace_back(j);
-                    ++indptr_[i + 1];
+                    if (i == j) {
+                        diag_[i] = v;
+                    } else {
+                        data_.emplace_back(v);
+                        indices_.emplace_back(j);
+                        ++indptr_[i + 1];
+                    }
                 }
             }
         }
@@ -60,9 +65,13 @@ CsrMatrix::CsrMatrix(const DokMatrix& dok)
     for (auto& p : dok.data()) {
         auto [ind, val] = p;
         if (!iszero(val)) {
-            data_.emplace_back(val);
-            indices_.emplace_back(ind.second);
-            ++indptr_[ind.first + 1];
+            if (ind.first == ind.second) {
+                diag_[ind.first] = val;
+            } else {
+                data_.emplace_back(val);
+                indices_.emplace_back(ind.second);
+                ++indptr_[ind.first + 1];
+            }
         }
     }
     data_.shrink_to_fit();
@@ -90,6 +99,11 @@ CsrMatrix::Index CsrMatrix::non_zero() const
     return data_.size();
 }
 
+
+const CsrMatrix::DataContainer& CsrMatrix::diag() const noexcept {
+    return diag_;
+}
+
 const CsrMatrix::DataContainer& CsrMatrix::data() const noexcept
 {
     return data_;
@@ -110,13 +124,17 @@ CsrMatrix::Value CsrMatrix::operator()(Index i, Index j) const
 
     Value result = 0;
 
-    auto b = begin(indices_);
-    auto ifirst = b + indptr_[i];
-    auto ilast = b + indptr_[i + 1];
-    if (ifirst < ilast) {
-        auto p = lower_bound(ifirst, ilast, j);
-        if (p != ilast && *p == j) {
-            result = data_[Index(p - b)];
+    if (i == j) {
+        result = diag_[i];
+    } else {
+        auto b = begin(indices_);
+        auto ifirst = b + indptr_[i];
+        auto ilast = b + indptr_[i + 1];
+        if (ifirst < ilast) {
+            auto p = lower_bound(ifirst, ilast, j);
+            if (p != ilast && *p == j) {
+                result = data_[Index(p - b)];
+            }
         }
     }
 
@@ -142,7 +160,7 @@ void dot(Vec& result, const CsrMatrix& lhs, const Vec& rhs)
     check_if(lhs.m_ == rhs.size(), "Incompatible shapes");
 
     for (CsrMatrix::Index i = 0; i < lhs.m_; ++i) {
-        auto u = 0.;
+        auto u = lhs.diag_[i] * rhs[i];
         auto k = lhs.indptr_[i];
         auto last = lhs.indptr_[i + 1];
         for (; k < last; ++k) {
@@ -157,6 +175,8 @@ void dot(Vec& result, const Vec& lhs, const CsrMatrix& rhs)
     check_if(lhs.size() == rhs.m_, "Incompatible shapes");
 
     for (CsrMatrix::Index i = 0; i < rhs.m_; ++i) {
+        result[i] += lhs[i] * rhs.diag_[i];
+
         auto k = rhs.indptr_[i];
         auto last = rhs.indptr_[i + 1];
         for (; k < last; ++k) {
@@ -178,7 +198,9 @@ ostream& operator<<(ostream& os, const CsrMatrix& obj)
 
         os << "[";
         for (j = 0; j < m; ++j) {
-            if (pos < end && obj.indices_[pos] == j) {
+            if (i == j) {
+                os << obj.diag_[i];
+            } else if (pos < end && obj.indices_[pos] == j) {
                 os << obj.data_[pos++];
             } else {
                 os << 0;
