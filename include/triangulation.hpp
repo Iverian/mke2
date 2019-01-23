@@ -1,5 +1,5 @@
-#ifndef MKE2_INCLUDE_TRIANG_BUILDER_H_
-#define MKE2_INCLUDE_TRIANG_BUILDER_H_
+#ifndef MKE2_INCLUDE_TRIANGULATION_H_
+#define MKE2_INCLUDE_TRIANGULATION_H_
 
 #include <array>
 #include <iostream>
@@ -165,4 +165,4 @@ private:
 
 }
 
-#endif // MKE2_INCLUDE_TRIANG_BUILDER_H_
+#endif // MKE2_INCLUDE_TRIANGULATION_H_

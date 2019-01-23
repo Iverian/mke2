@@ -1,5 +1,5 @@
-#ifndef MKE2_INCLUDE_LUP_DECOMPOSITION_HPP_
-#define MKE2_INCLUDE_LUP_DECOMPOSITION_HPP_
+#ifndef MKE2_INCLUDE_LUP_FACTOR_HPP_
+#define MKE2_INCLUDE_LUP_FACTOR_HPP_
 
 #include "dense_matrix.hpp"
 #include "vec.hpp"
@@ -28,4 +28,4 @@ private:
     PivotType pivot_;
 };
 
-#endif // MKE2_INCLUDE_LUP_DECOMPOSITION_HPP_
+#endif // MKE2_INCLUDE_LUP_FACTOR_HPP_

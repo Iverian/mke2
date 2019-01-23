@@ -35,7 +35,7 @@ int main(int argc, char const* argv[])
 #ifndef DENSE_SOLVE
         auto [mat, vec] = build_global_system(t, LocalEqGen(gen_local));
         auto x0 = Vec(vec.size(), init);
-        auto res = solve(mat, vec, move(x0));
+        auto res = psolve(mat, vec, move(x0));
 #else  // DENSE_SOLVE
         auto [mat, vec] = build_global_system_dense(t, LocalEqGen(gen_local));
         auto res = LupFactor(mat).factor().solve(vec);
