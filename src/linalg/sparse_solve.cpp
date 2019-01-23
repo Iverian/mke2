@@ -1,9 +1,9 @@
+#include <constants.hpp>
 #include <csr_matrix.hpp>
 #include <debug.hpp>
 
-#include <cmath>
 
-static constexpr size_t max_iter = 10000;
+#include <cmath>
 
 using namespace std;
 
@@ -70,7 +70,7 @@ Vec solve(const CsrMatrix& lhs, const Vec& rhs, Vec x0)
             success = true;
             break;
         }
-    } while (++step < max_iter);
+    } while (++step < cnst::max_iter);
 
     if (success) {
         cout << "Iteration converged";
@@ -155,7 +155,7 @@ Vec psolve(const CsrMatrix& lhs, const Vec& rhs, Vec x0)
             success = true;
             break;
         }
-    } while (++step < max_iter);
+    } while (++step < cnst::max_iter);
 
     if (success) {
         cout << "Iteration converged";

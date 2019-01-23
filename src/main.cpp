@@ -5,6 +5,7 @@
 #include <local_eq_gen.hpp>
 #include <triangulation.hpp>
 #include <lup_factor.hpp>
+#include <constants.hpp>
 
 #include <chrono>
 #include <fstream>
@@ -12,34 +13,27 @@
 #include <memory>
 #include <stdexcept>
 
-// #define DENSE_SOLVE
-
 using namespace std;
-
-static constexpr auto xdim = 200.;
-static constexpr auto ydim = 40.;
-static constexpr auto zdim = 40.;
-static constexpr size_t scale = 10;
 
 int main(int argc, char const* argv[])
 {
     try {
-        double init = 0;
+        double init = cnst::init;
         if (argc > 2) {
             init = atof(argv[2]);
         }
-        auto t = Triangulation::cuboid({xdim, ydim, zdim}, scale);
+        auto t = Triangulation::cuboid({cnst::xdim, cnst::ydim, cnst::zdim}, cnst::scale);
 
         auto start = chrono::high_resolution_clock::now();
 
-#ifndef DENSE_SOLVE
+#ifndef MKE2_DENSE_SOLVE
         auto [mat, vec] = build_global_system(t, LocalEqGen(gen_local));
         auto x0 = Vec(vec.size(), init);
         auto res = psolve(mat, vec, move(x0));
-#else  // DENSE_SOLVE
+#else  // MKE2_DENSE_SOLVE
         auto [mat, vec] = build_global_system_dense(t, LocalEqGen(gen_local));
         auto res = LupFactor(mat).factor().solve(vec);
-#endif // DENSE_SOLVE
+#endif // MKE2_DENSE_SOLVE
 
         auto finish = chrono::high_resolution_clock::now();
         cout << "Iteration finished in "
