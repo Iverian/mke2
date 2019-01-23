@@ -4,8 +4,6 @@
 
 using namespace std;
 
-using Index = Triangulation::Index;
-
 pair<CsrMatrix, Vec> build_global_system(const Triangulation& t,
                                          LocalEqGen gen)
 {

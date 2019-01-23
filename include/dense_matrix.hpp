@@ -7,8 +7,8 @@
 #include <ostream>
 #include <vector>
 
-class DenseMatrix : public AbstractMatrix, std::vector<AbstractMatrix::Value> {
-    using Super = std::vector<AbstractMatrix::Value>;
+class DenseMatrix : public AbstractMatrix, std::vector<Value> {
+    using Super = std::vector<Value>;
 
 public:
     using Super::begin;
@@ -22,10 +22,10 @@ public:
     static DenseMatrix eye(Index dim);
 
     DenseMatrix();
-    DenseMatrix(Shape shape, const Super& data = Super());
-    DenseMatrix(Shape shape, Value val);
+    DenseMatrix(Index2d shape, const Super& data = Super());
+    DenseMatrix(Index2d shape, Value val);
     template <class InputIt>
-    DenseMatrix(Shape shape, InputIt first, InputIt last);
+    DenseMatrix(Index2d shape, InputIt first, InputIt last);
 
     DenseMatrix(const DenseMatrix&) = default;
     DenseMatrix(DenseMatrix&&) noexcept = default;
@@ -33,7 +33,7 @@ public:
     DenseMatrix& operator=(DenseMatrix&&) noexcept = default;
 
     Index size() const override;
-    Shape shape() const override;
+    Index2d shape() const override;
     Value& operator()(Index i, Index j);
     const Value& operator()(Index i, Index j) const;
 
@@ -73,11 +73,11 @@ public:
                                         const DenseMatrix& rhs);
 
 private:
-    Shape shape_;
+    Index2d shape_;
 };
 
 template <class InputIt>
-DenseMatrix::DenseMatrix(Shape shape, InputIt first, InputIt last)
+DenseMatrix::DenseMatrix(Index2d shape, InputIt first, InputIt last)
     : Super(first, last)
     , shape_(shape)
 {

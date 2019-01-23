@@ -12,7 +12,7 @@ DenseMatrix::DenseMatrix()
 {
 }
 
-DenseMatrix::DenseMatrix(Shape shape, const Super& data)
+DenseMatrix::DenseMatrix(Index2d shape, const Super& data)
     : Super(data)
     , shape_(shape)
 {
@@ -21,19 +21,19 @@ DenseMatrix::DenseMatrix(Shape shape, const Super& data)
     }
 }
 
-DenseMatrix::DenseMatrix(Shape shape, Value val)
+DenseMatrix::DenseMatrix(Index2d shape, Value val)
     : Super()
     , shape_(shape)
 {
     resize(size(), val);
 }
 
-DenseMatrix::Index DenseMatrix::size() const
+Index DenseMatrix::size() const
 {
-    return shape_.m * shape_.n;
+    return shape_.first * shape_.second;
 }
 
-DenseMatrix::Shape DenseMatrix::shape() const
+Index2d DenseMatrix::shape() const
 {
     return shape_;
 }
@@ -50,28 +50,28 @@ const DenseMatrix::Super& DenseMatrix::data() const
     return result;
 }
 
-#define _(i, j) ((*this)[(shape_.n) * (i) + (j)])
+#define _(i, j) ((*this)[(shape_.second) * (i) + (j)])
 
-DenseMatrix::Value& DenseMatrix::operator()(Index i, Index j)
+Value& DenseMatrix::operator()(Index i, Index j)
 {
-    check_if(i < shape_.m && j < shape_.n, "Index out of range");
+    check_if(i < shape_.first && j < shape_.second, "Index out of range");
 
     return _(i, j);
 }
 
-const DenseMatrix::Value& DenseMatrix::operator()(Index i, Index j) const
+const Value& DenseMatrix::operator()(Index i, Index j) const
 
 {
-    check_if(i < shape_.m && j < shape_.n, "Index out of range");
+    check_if(i < shape_.first && j < shape_.second, "Index out of range");
 
     return _(i, j);
 }
 
 DenseMatrix& DenseMatrix::swap_rows(Index i, Index j)
 {
-    check_if(i < shape_.m && j < shape_.m, "Index out of range");
+    check_if(i < shape_.first && j < shape_.first, "Index out of range");
 
-    for (Index k = 0; k < shape_.n; ++k) {
+    for (Index k = 0; k < shape_.second; ++k) {
         ::swap(_(i, k), _(j, k));
     }
     return *this;
@@ -79,9 +79,9 @@ DenseMatrix& DenseMatrix::swap_rows(Index i, Index j)
 
 DenseMatrix& DenseMatrix::swap_columns(Index i, Index j)
 {
-    check_if(i < shape_.n && j < shape_.n, "Index out of range");
+    check_if(i < shape_.second && j < shape_.second, "Index out of range");
 
-    for (Index k = 0; k < shape_.m; ++k) {
+    for (Index k = 0; k < shape_.first; ++k) {
         ::swap(_(k, i), _(k, j));
     }
     return *this;
@@ -89,35 +89,35 @@ DenseMatrix& DenseMatrix::swap_columns(Index i, Index j)
 
 DenseMatrix& DenseMatrix::append_row(const Vec& v)
 {
-    check_if(v.size() == shape_.n, "Incompatible shapes");
+    check_if(v.size() == shape_.second, "Incompatible shapes");
 
-    resize(size() + shape_.n);
-    for (Index j = 0; j < shape_.n; ++j) {
-        (*this)(shape_.m, j) = v[j];
+    resize(size() + shape_.second);
+    for (Index j = 0; j < shape_.second; ++j) {
+        (*this)(shape_.first, j) = v[j];
     }
-    ++shape_.m;
+    ++shape_.first;
 
     return *this;
 }
 
 DenseMatrix& DenseMatrix::append_column(const Vec& v)
 {
-    check_if(v.size() == shape_.m, "Incompatible shapes");
+    check_if(v.size() == shape_.first, "Incompatible shapes");
 
-    reserve(size() + shape_.m);
-    auto pos = begin() + shape_.n;
-    for (Index i = 0; i < shape_.m; ++i) {
+    reserve(size() + shape_.first);
+    auto pos = begin() + shape_.second;
+    for (Index i = 0; i < shape_.first; ++i) {
         insert(pos, v[i]);
-        pos += shape_.n;
+        pos += shape_.second;
     }
     return *this;
 }
 
 DenseMatrix DenseMatrix::transpose() const
 {
-    DenseMatrix result({shape_.n, shape_.m});
-    for (Index i = 0; i < shape_.m; ++i) {
-        for (Index j = 0; j < shape_.n; ++j) {
+    DenseMatrix result({shape_.second, shape_.first});
+    for (Index i = 0; i < shape_.first; ++i) {
+        for (Index j = 0; j < shape_.second; ++j) {
             result(j, i) = (*this)(i, j);
         }
     }
@@ -166,9 +166,9 @@ bool operator==(const DenseMatrix& lhs, const DenseMatrix& rhs)
 {
     auto result = lhs.shape_ == rhs.shape_;
     if (result) {
-        double max = 0;
+        Value max = 0;
         auto s = lhs.size();
-        for (DenseMatrix::Index i = 0; i < s; ++i) {
+        for (Index i = 0; i < s; ++i) {
             if (auto cur = fabs(rhs[i] - lhs[i]); cur > max) {
                 max = cur;
             }
@@ -186,12 +186,12 @@ bool operator!=(const DenseMatrix& lhs, const DenseMatrix& rhs)
 ostream& operator<<(ostream& os, const DenseMatrix& obj)
 {
     os << "{\"shape\": " << obj.shape_ << ",\"data\": [";
-    for (DenseMatrix::Index i = 0; i < obj.shape_.m; ++i) {
+    for (Index i = 0; i < obj.shape_.first; ++i) {
         os << "[";
-        for (DenseMatrix::Index j = 0; j < obj.shape_.n; ++j) {
-            os << obj(i, j) << (j + 1 != obj.shape_.n ? ", " : "]");
+        for (Index j = 0; j < obj.shape_.second; ++j) {
+            os << obj(i, j) << (j + 1 != obj.shape_.second ? ", " : "]");
         }
-        os << (i + 1 != obj.shape_.m ? ", " : "]");
+        os << (i + 1 != obj.shape_.first ? ", " : "]");
     }
     return os << "}";
 }
@@ -210,13 +210,13 @@ DenseMatrix operator-(const DenseMatrix& lhs, const DenseMatrix& rhs)
 
 DenseMatrix operator*(const DenseMatrix& lhs, const DenseMatrix& rhs)
 {
-    check_if(lhs.shape_.n == rhs.shape_.m, "Incompatible shapes");
+    check_if(lhs.shape_.second == rhs.shape_.first, "Incompatible shapes");
 
-    DenseMatrix result({lhs.shape_.m, rhs.shape_.n});
-    DenseMatrix::Index i, j, k;
-    for (i = 0; i < lhs.shape_.m; ++i) {
-        for (k = 0; k < lhs.shape_.n; ++k) {
-            for (j = 0; j < rhs.shape_.n; ++j) {
+    DenseMatrix result({lhs.shape_.first, rhs.shape_.second});
+    Index i, j, k;
+    for (i = 0; i < lhs.shape_.first; ++i) {
+        for (k = 0; k < lhs.shape_.second; ++k) {
+            for (j = 0; j < rhs.shape_.second; ++j) {
                 result(i, j) += lhs(i, k) * rhs(k, j);
             }
         }
@@ -224,19 +224,19 @@ DenseMatrix operator*(const DenseMatrix& lhs, const DenseMatrix& rhs)
     return result;
 }
 
-DenseMatrix operator*(const DenseMatrix& lhs, DenseMatrix::Value rhs)
+DenseMatrix operator*(const DenseMatrix& lhs, Value rhs)
 {
     auto result = lhs;
     return (result *= rhs);
 }
 
-DenseMatrix operator*(DenseMatrix::Value lhs, const DenseMatrix& rhs)
+DenseMatrix operator*(Value lhs, const DenseMatrix& rhs)
 {
     auto result = rhs;
     return (result *= lhs);
 }
 
-DenseMatrix operator/(const DenseMatrix& lhs, DenseMatrix::Value rhs)
+DenseMatrix operator/(const DenseMatrix& lhs, Value rhs)
 {
     auto result = lhs;
     return (result /= rhs);
@@ -244,11 +244,11 @@ DenseMatrix operator/(const DenseMatrix& lhs, DenseMatrix::Value rhs)
 
 Vec operator*(const DenseMatrix& lhs, const Vec& rhs)
 {
-    check_if(lhs.shape_.n == rhs.size(), "Incompatible shapes");
+    check_if(lhs.shape_.second == rhs.size(), "Incompatible shapes");
 
-    Vec result(lhs.shape_.m, 0.);
-    for (DenseMatrix::Index i = 0; i < lhs.shape_.m; ++i) {
-        for (DenseMatrix::Index j = 0; j < lhs.shape_.n; ++j) {
+    Vec result(lhs.shape_.first, 0.);
+    for (Index i = 0; i < lhs.shape_.first; ++i) {
+        for (Index j = 0; j < lhs.shape_.second; ++j) {
             result[i] += lhs(i, j) * rhs[j];
         }
     }
@@ -257,12 +257,12 @@ Vec operator*(const DenseMatrix& lhs, const Vec& rhs)
 
 Vec operator*(const Vec& lhs, const DenseMatrix& rhs)
 {
-    check_if(lhs.size() == rhs.shape_.m, "Incompatible shapes");
+    check_if(lhs.size() == rhs.shape_.first, "Incompatible shapes");
 
-    Vec result(rhs.shape_.n, 0.);
-    for (DenseMatrix::Index i = 0; i < rhs.shape_.m; ++i) {
+    Vec result(rhs.shape_.second, 0.);
+    for (Index i = 0; i < rhs.shape_.first; ++i) {
         auto v = lhs[i];
-        for (DenseMatrix::Index j = 0; j < rhs.shape_.n; ++j) {
+        for (Index j = 0; j < rhs.shape_.second; ++j) {
             result[j] += v * rhs(i, j);
         }
     }
@@ -275,10 +275,10 @@ DenseMatrix kroneker_product(const DenseMatrix& lhs, const DenseMatrix& rhs)
     auto [p, q] = rhs.shape_;
     DenseMatrix result({m * p, n * q});
 
-    for (DenseMatrix::Index i = 0; i < m; ++i) {
-        for (DenseMatrix::Index j = 0; j < n; ++j) {
-            for (DenseMatrix::Index r = 0; r < p; ++r) {
-                for (DenseMatrix::Index s = 0; s < q; ++s) {
+    for (Index i = 0; i < m; ++i) {
+        for (Index j = 0; j < n; ++j) {
+            for (Index r = 0; r < p; ++r) {
+                for (Index s = 0; s < q; ++s) {
                     result(i * p + r, j * q + s) = lhs(i, j) * rhs(r, s);
                 }
             }

@@ -1,16 +1,14 @@
-#include <csr_matrix.hpp>
-#include <debug.hpp>
+#include <constants.hpp>
 #include <export.hpp>
 #include <global_eq_builder.hpp>
 #include <local_eq_gen.hpp>
-#include <triangulation.hpp>
 #include <lup_factor.hpp>
-#include <constants.hpp>
+#include <triangulation.hpp>
+
 
 #include <chrono>
 #include <fstream>
 #include <iostream>
-#include <memory>
 #include <stdexcept>
 
 using namespace std;
@@ -18,11 +16,12 @@ using namespace std;
 int main(int argc, char const* argv[])
 {
     try {
-        double init = cnst::init;
+        auto init = cnst::init;
         if (argc > 2) {
             init = atof(argv[2]);
         }
-        auto t = Triangulation::cuboid({cnst::xdim, cnst::ydim, cnst::zdim}, cnst::scale);
+        auto t = Triangulation::cuboid({cnst::xdim, cnst::ydim, cnst::zdim},
+                                       cnst::scale);
 
         auto start = chrono::high_resolution_clock::now();
 

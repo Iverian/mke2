@@ -1,35 +1,33 @@
 #ifndef MKE2_SRC_MKE2_GLOBAL_INDICES_HPP_
 #define MKE2_SRC_MKE2_GLOBAL_INDICES_HPP_
 
+#include "common_types.hpp"
 #include "debug.hpp"
-#include "triangulation.hpp"
 
-enum class Coord : Triangulation::Index { X, Y, Z };
+
+enum class Coord : Index { X, Y, Z };
 
 template <class CoordIndex>
-Triangulation::Index _g(const Triangulation::Index& node,
-                        const CoordIndex& coord, const Triangulation::Index& m)
+Index _g(const Index& node, const CoordIndex& coord, const Index& m)
 {
-    check_if(node < m && Triangulation::Index(coord) < Triangulation::DIM,
+    check_if(node < m && Index(coord) < Triangulation::DIM,
              "Index out of range");
 
 #ifndef MKE2_GLOBAL_INDICES_DOF_FIRST
-    return node * Triangulation::DIM + Triangulation::Index(coord);
+    return node * Triangulation::DIM + Index(coord);
 #else  // MKE2_GLOBAL_INDICES_DOF_FIRST
-    return Triangulation::Index(coord) * m + node;
+    return Index(coord) * m + node;
 #endif // MKE2_GLOBAL_INDICES_DOF_FIRST
 }
 
 template <class CoordIndex>
-Triangulation::Index _v(const Triangulation::Index& node,
-                        const CoordIndex& coord)
+Index _v(const Index& node, const CoordIndex& coord)
 {
     return _g(node, coord, Triangulation::N);
 }
 
 template <class CoordIndex>
-Triangulation::Index _s(const Triangulation::Index& node,
-                        const CoordIndex& coord)
+Index _s(const Index& node, const CoordIndex& coord)
 {
     return _g(node, coord, Triangulation::SN);
 }

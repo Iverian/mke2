@@ -9,7 +9,7 @@
 
 using namespace std;
 
-static constexpr AbstractMatrix::Index N = 2000;
+static constexpr Index N = 2000;
 
 TEST(TestSparse, test_modify)
 {
@@ -17,8 +17,8 @@ TEST(TestSparse, test_modify)
     DenseMatrix b({N, N}, 0);
 
     default_random_engine eng;
-    uniform_real_distribution<double> dr;
-    uniform_int_distribution<AbstractMatrix::Index> di(0, N - 1);
+    uniform_real_distribution<Value> dr;
+    uniform_int_distribution<Index> di(0, N - 1);
 
     auto seed = default_random_engine::result_type(
         chrono::system_clock::now().time_since_epoch().count() % 1000000);
@@ -38,8 +38,8 @@ TEST(TestSparse, test_modify)
         }
     }
 
-    for (AbstractMatrix::Index i = 0; i < N; ++i) {
-        for (AbstractMatrix::Index j = 0; j < N; ++j) {
+    for (Index i = 0; i < N; ++i) {
+        for (Index j = 0; j < N; ++j) {
             ASSERT_DOUBLE_EQ(a(i, j), b(i, j));
         }
     }
@@ -52,12 +52,12 @@ TEST(TestSparse, test_solve_rand)
     Vec x(N, 0.);
 
     default_random_engine eng;
-    uniform_real_distribution<double> dr(-1., 1.);
-    uniform_int_distribution<AbstractMatrix::Index> di(0, N - 1);
+    uniform_real_distribution<Value> dr(-1., 1.);
+    uniform_int_distribution<Index> di(0, N - 1);
 
     eng.seed(default_random_engine::result_type(
         chrono::system_clock::now().time_since_epoch().count()));
-    for (AbstractMatrix::Index i = 0; i < N; ++i) {
+    for (Index i = 0; i < N; ++i) {
         da.set(i, i, dr(eng));
         x[i] = dr(eng);
     }

@@ -25,7 +25,7 @@ Vec& Vec::operator-=(const Vec& rhs)
     }
     return *this;
 }
-Vec& Vec::operator*=(double rhs)
+Vec& Vec::operator*=(Value rhs)
 {
     for (size_t i = 0; i < size(); ++i) {
         (*this)[i] *= rhs;
@@ -33,7 +33,7 @@ Vec& Vec::operator*=(double rhs)
     return *this;
 }
 
-Vec& Vec::operator/=(double rhs)
+Vec& Vec::operator/=(Value rhs)
 {
     for (size_t i = 0; i < size(); ++i) {
         (*this)[i] /= rhs;
@@ -47,9 +47,9 @@ bool operator==(const Vec& lhs, const Vec& rhs)
         && iszero(cdist(lhs, rhs), Tolerance::DOUBLE);
 }
 
-double cnorm(const Vec& lhs)
+Value cnorm(const Vec& lhs)
 {
-    double max = 0;
+    Value max = 0;
     for (auto& xi : lhs) {
         if (auto cur = fabs(xi); cur > max) {
             max = cur;
@@ -58,7 +58,7 @@ double cnorm(const Vec& lhs)
     return max;
 }
 
-double cdist(const Vec& lhs, const Vec& rhs)
+Value cdist(const Vec& lhs, const Vec& rhs)
 {
     return cnorm(rhs - lhs);
 }
@@ -80,36 +80,36 @@ Vec operator-(const Vec& lhs, const Vec& rhs)
     return (result -= rhs);
 }
 
-Vec operator*(const Vec& lhs, double rhs)
+Vec operator*(const Vec& lhs, Value rhs)
 {
     auto result = lhs;
     return (result *= rhs);
 }
 
-Vec operator*(double lhs, const Vec& rhs)
+Vec operator*(Value lhs, const Vec& rhs)
 {
     auto result = rhs;
     return (result *= lhs);
 }
 
-Vec operator/(const Vec& lhs, double rhs)
+Vec operator/(const Vec& lhs, Value rhs)
 {
     auto result = lhs;
     return (result /= rhs);
 }
 
-double dot(const Vec& lhs, const Vec& rhs)
+Value dot(const Vec& lhs, const Vec& rhs)
 {
     check_if(lhs.size() == rhs.size(), "Dimensions are not equal");
 
-    double result = 0;
+    Value result = 0;
     for (size_t i = 0; i < lhs.size(); ++i) {
         result += lhs[i] * rhs[i];
     }
     return result;
 }
 
-double sqr(const Vec& obj)
+Value sqr(const Vec& obj)
 {
     return dot(obj, obj);
 }

@@ -57,7 +57,7 @@ CsrMatrix::CsrMatrix(Index side, const DataContainer& vals)
 #undef _
 
 CsrMatrix::CsrMatrix(const DokMatrix& dok)
-    : CsrMatrix(dok.shape().m)
+    : CsrMatrix(dok.shape().first)
 {
     data_.reserve(dok.non_zero());
     indices_.reserve(dok.non_zero());
@@ -84,17 +84,17 @@ CsrMatrix::CsrMatrix(const DokMatrix& dok)
     }
 }
 
-CsrMatrix::Index CsrMatrix::size() const
+Index CsrMatrix::size() const
 {
     return m_ * m_;
 }
 
-CsrMatrix::Shape CsrMatrix::shape() const
+Index2d CsrMatrix::shape() const
 {
     return {m_, m_};
 }
 
-CsrMatrix::Index CsrMatrix::non_zero() const
+Index CsrMatrix::non_zero() const
 {
     return data_.size();
 }
@@ -118,7 +118,7 @@ const CsrMatrix::IndexContainer& CsrMatrix::indices() const noexcept
     return indices_;
 }
 
-CsrMatrix::Value CsrMatrix::operator()(Index i, Index j) const
+Value CsrMatrix::operator()(Index i, Index j) const
 {
     check_if(i < m_ && j < m_, "Index out of range");
 
@@ -159,7 +159,7 @@ void dot(Vec& result, const CsrMatrix& lhs, const Vec& rhs)
 {
     check_if(lhs.m_ == rhs.size(), "Incompatible shapes");
 
-    for (CsrMatrix::Index i = 0; i < lhs.m_; ++i) {
+    for (Index i = 0; i < lhs.m_; ++i) {
         auto u = lhs.diag_[i] * rhs[i];
         auto k = lhs.indptr_[i];
         auto last = lhs.indptr_[i + 1];
@@ -174,7 +174,7 @@ void dot(Vec& result, const Vec& lhs, const CsrMatrix& rhs)
 {
     check_if(lhs.size() == rhs.m_, "Incompatible shapes");
 
-    for (CsrMatrix::Index i = 0; i < rhs.m_; ++i) {
+    for (Index i = 0; i < rhs.m_; ++i) {
         result[i] += lhs[i] * rhs.diag_[i];
 
         auto k = rhs.indptr_[i];
@@ -189,7 +189,7 @@ void dot(Vec& result, const Vec& lhs, const CsrMatrix& rhs)
 ostream& operator<<(ostream& os, const CsrMatrix& obj)
 {
     auto& m = obj.m_;
-    CsrMatrix::Index i, j;
+    Index i, j;
 
     os << "{\"shape\": " << obj.shape() << ", \"data\": [";
     for (i = 0; i < m; ++i) {

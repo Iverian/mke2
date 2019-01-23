@@ -8,22 +8,22 @@ DokMatrix::DokMatrix(Index side)
 {
 }
 
-DokMatrix::Index DokMatrix::size() const
+Index DokMatrix::size() const
 {
     return m_ * m_;
 }
 
-DokMatrix::Shape DokMatrix::shape() const
+Index2d DokMatrix::shape() const
 {
     return {m_, m_};
 }
 
-DokMatrix::Index DokMatrix::non_zero() const noexcept
+Index DokMatrix::non_zero() const noexcept
 {
     return data_.size();
 }
 
-DokMatrix::Value DokMatrix::operator()(Index i, Index j) const
+Value DokMatrix::operator()(Index i, Index j) const
 {
     check_if(i < m_ && j < m_, "Index out of range");
 
@@ -32,17 +32,17 @@ DokMatrix::Value DokMatrix::operator()(Index i, Index j) const
     return pos != end(data_) ? pos->second : Value(0);
 }
 
-DokMatrix::Value DokMatrix::add(Index i, Index j, Value val)
+Value DokMatrix::add(Index i, Index j, Value val)
 {
     return modify({i, j}, [&val](auto x) { return x + val; });
 }
 
-DokMatrix::Value DokMatrix::sub(Index i, Index j, Value val)
+Value DokMatrix::sub(Index i, Index j, Value val)
 {
     return modify({i, j}, [&val](auto x) { return x - val; });
 }
 
-DokMatrix::Value DokMatrix::set(Index i, Index j, Value val)
+Value DokMatrix::set(Index i, Index j, Value val)
 {
     return modify({i, j}, [&val](auto) { return val; });
 }

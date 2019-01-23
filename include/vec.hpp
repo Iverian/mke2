@@ -4,16 +4,18 @@
 #include <ostream>
 #include <vector>
 
-class Vec : public std::vector<double> {
-    using Super = std::vector<double>;
+#include "common_types.hpp"
+
+class Vec : public std::vector<Value> {
+    using Super = std::vector<Value>;
 
 public:
     using Super::Super;
 
     Vec& operator+=(const Vec& rhs);
     Vec& operator-=(const Vec& rhs);
-    Vec& operator*=(double rhs);
-    Vec& operator/=(double rhs);
+    Vec& operator*=(Value rhs);
+    Vec& operator/=(Value rhs);
 
     friend std::ostream& operator<<(std::ostream& os, const Vec& obj);
 
@@ -22,14 +24,14 @@ public:
 
     friend Vec operator+(const Vec& lhs, const Vec& rhs);
     friend Vec operator-(const Vec& lhs, const Vec& rhs);
-    friend Vec operator*(const Vec& lhs, double rhs);
-    friend Vec operator*(double lhs, const Vec& rhs);
-    friend Vec operator/(const Vec& lhs, double rhs);
+    friend Vec operator*(const Vec& lhs, Value rhs);
+    friend Vec operator*(Value lhs, const Vec& rhs);
+    friend Vec operator/(const Vec& lhs, Value rhs);
 
-    friend double dot(const Vec& lhs, const Vec& rhs);
-    friend double cnorm(const Vec& lhs);
-    friend double cdist(const Vec& lhs, const Vec& rhs);
-    friend double sqr(const Vec& obj);
+    friend Value dot(const Vec& lhs, const Vec& rhs);
+    friend Value cnorm(const Vec& lhs);
+    friend Value cdist(const Vec& lhs, const Vec& rhs);
+    friend Value sqr(const Vec& obj);
 
 };
 

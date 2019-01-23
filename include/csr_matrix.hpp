@@ -24,7 +24,7 @@ public:
     explicit CsrMatrix(const DokMatrix& dok);
 
     Index size() const override;
-    Shape shape() const override;
+    Index2d shape() const override;
     Index non_zero() const;
 
     const DataContainer& diag() const noexcept;

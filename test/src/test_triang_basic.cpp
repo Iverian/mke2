@@ -16,7 +16,7 @@ TEST(TestTriangBasic, test_tetra)
 
     auto [mat, vec] = build_global_system(t, LocalEqGen(gen_local));
 
-    for (CsrMatrix::Index i = 0; i < mat.shape().m; ++i) {
+    for (Index i = 0; i < mat.shape().first; ++i) {
         auto a = mat.indptr()[i];
         auto b = mat.indptr()[i + 1];
         ASSERT_EQ(b - a, 1);

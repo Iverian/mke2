@@ -4,19 +4,19 @@
 
 using namespace std;
 
-bool isnear(double lhs, double rhs, Tolerance t)
+bool isnear(Value lhs, Value rhs, Tolerance t)
 {
-    static constexpr double tol[] = {1e-2, 1e-5, 1e-10, 1e-20};
+    static constexpr Value tol[] = {1e-2, 1e-5, 1e-10, 1e-20};
 
     return fabs(lhs - rhs) < tol[size_t(t)];
 }
 
-bool iszero(double x, Tolerance t)
+bool iszero(Value x, Tolerance t)
 {
     return isnear(x, 0., t);
 }
 
-double sqr(double x)
+Value sqr(Value x)
 {
     return x * x;
 }

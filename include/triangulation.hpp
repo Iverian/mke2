@@ -12,9 +12,9 @@
 
 class Triangulation {
 public:
-    static constexpr AbstractMatrix::Index DIM = 3;
-    static constexpr AbstractMatrix::Index N = DIM + 1;
-    static constexpr AbstractMatrix::Index SN = DIM;
+    static constexpr Index DIM = 3;
+    static constexpr Index N = DIM + 1;
+    static constexpr Index SN = DIM;
 
     class OnFirst : public std::array<bool, 2> {
     public:
@@ -24,7 +24,6 @@ public:
         }
     };
 
-    using Index = AbstractMatrix::Index;
     using NodeContainer = std::unordered_map<Point3d, Index>;
 
     class NodePtr {
@@ -41,7 +40,7 @@ public:
         SurfaceElement(const Super& data = Super());
 
         Data data() const;
-        double area() const;
+        Value area() const;
 
         friend std::ostream& operator<<(std::ostream& os,
                                         const SurfaceElement& obj);
@@ -54,7 +53,7 @@ public:
         FiniteElement(const Super& data = Super());
 
         Data data() const;
-        double volume() const;
+        Value volume() const;
         SurfaceElement face(Index i) const;
 
         friend std::ostream& operator<<(std::ostream& os,
@@ -62,9 +61,9 @@ public:
     };
 
     Triangulation();
-    explicit Triangulation(const std::array<double, DIM>& dim);
+    explicit Triangulation(const std::array<Value, DIM>& dim);
 
-    const std::array<double, DIM>& dim() const;
+    const std::array<Value, DIM>& dim() const;
     const NodeContainer& nodes() const;
     const std::vector<std::pair<Index, SurfaceElement>>& triangles() const;
     const std::vector<FiniteElement>& elems() const;
@@ -86,14 +85,14 @@ public:
     friend std::ostream& operator<<(std::ostream& os,
                                     const Triangulation& obj);
 
-    static Triangulation cuboid(std::array<double, DIM> dim,
+    static Triangulation cuboid(std::array<Value, DIM> dim,
                                 std::array<Index, DIM> size);
-    static Triangulation cuboid(std::array<double, DIM> dim, Index scale);
+    static Triangulation cuboid(std::array<Value, DIM> dim, Index scale);
     static Triangulation from_msh(const char* filename,
-                                  std::array<double, DIM> dim);
+                                  std::array<Value, DIM> dim);
 
 private:
-    std::array<double, DIM> dim_;
+    std::array<Value, DIM> dim_;
 
     Index size_;
     NodeContainer nodes_;

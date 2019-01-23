@@ -40,7 +40,7 @@ TEST_F(TestGlobalEq, test_symmetric)
 {
     auto& mat = d->glob.first;
 
-    for (CsrMatrix::Index i = 0; i < mat.shape().m; ++i) {
+    for (Index i = 0; i < mat.shape().first; ++i) {
         auto k = mat.indptr()[i];
         auto last = mat.indptr()[i + 1];
 
@@ -60,7 +60,7 @@ TEST_F(TestGlobalEq, test_zero_rows)
 {
     auto& mat = d->glob.first;
 
-    for (CsrMatrix::Index i = 0; i < mat.shape().m; ++i) {
+    for (Index i = 0; i < mat.shape().first; ++i) {
         auto first = mat.indptr()[i];
         auto last = mat.indptr()[i + 1];
 
@@ -73,11 +73,11 @@ TEST_F(TestGlobalEq, test_zero_rows)
 TEST_F(TestGlobalEq, test_zero_cols)
 {
     auto& mat = d->glob.first;
-    auto m = mat.shape().m;
+    auto m = mat.shape().first;
     vector<bool> nonzero(m, false);
     size_t count = 0;
 
-    for (CsrMatrix::Index i = 0; i < m; ++i) {
+    for (Index i = 0; i < m; ++i) {
         if (!iszero(mat.diag()[i])) {
             nonzero[i] = true;
             ++count;
@@ -101,9 +101,9 @@ TEST_F(TestGlobalEq, test_zero_cols)
 TEST_F(TestGlobalEq, test_zero_diag)
 {
     auto& mat = d->glob.first;
-    auto m = mat.shape().m;
+    auto m = mat.shape().first;
 
-    for (CsrMatrix::Index i = 0; i < m; ++i) {
+    for (Index i = 0; i < m; ++i) {
         ASSERT_TRUE(!iszero(mat.diag()[i]));
     }
     SUCCEED();
@@ -112,10 +112,10 @@ TEST_F(TestGlobalEq, test_zero_diag)
 TEST_F(TestGlobalEq, test_positive)
 {
     auto& mat = d->glob.first;
-    auto m = mat.shape().m;
+    auto m = mat.shape().first;
 
     default_random_engine eng;
-    uniform_real_distribution<double> dr(-1., 1.);
+    uniform_real_distribution<Value> dr(-1., 1.);
 
     Vec x(m, 0.), y(m, 0.);
     for (size_t count = 0; count < 100; ++count) {
@@ -137,14 +137,14 @@ TEST_F(TestGlobalEq, strict_first_boundary_condition)
 {
     auto& t = d->t;
     auto& [mat, vec] = d->glob;
-    const auto m = mat.shape().m;
+    const auto m = mat.shape().first;
 
     for (auto& fc : t.first()) {
         for (auto& n : fc) {
             auto gn = n.index();
             auto cn = t.on_first(n);
 
-            for (Triangulation::Index p = 0; p < Triangulation::DIM; ++p) {
+            for (Index p = 0; p < Triangulation::DIM; ++p) {
                 auto cnp = t.on_first(cn, p);
                 if (cnp) {
                     auto gnp = _g(gn, p, m);
@@ -155,7 +155,7 @@ TEST_F(TestGlobalEq, strict_first_boundary_condition)
                     ASSERT_DOUBLE_EQ(vec[gnp], 0.);
                     ASSERT_DOUBLE_EQ(mat.diag()[gnp], 1.);
 
-                    for (CsrMatrix::Index j = 0; j < m; ++j) {
+                    for (Index j = 0; j < m; ++j) {
                         if (gnp == j) {
                             continue;
                         }

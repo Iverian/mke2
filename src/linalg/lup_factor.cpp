@@ -23,20 +23,20 @@ LupFactor::LupFactor(DenseMatrix&& in)
 LupFactor& LupFactor::factor()
 {
     auto s = mat_.shape();
-    check_if(s.m == s.n, "Matrix is not square");
+    check_if(s.first == s.second, "Matrix is not square");
 
-    m_ = s.m;
+    m_ = s.first;
     pivot_ = PivotType(m_ + 1);
     for (Index i = 0; i < m_ + 1; ++i) {
         pivot_[i] = i;
     }
 
     for (Index i = 0; i < m_; ++i) {
-        double mmax = 0.0;
+        Value mmax = 0.0;
         auto imax = i;
 
         for (Index k = i; k < m_; ++k)
-            if (auto mabs = fabs(mat_(k, i)); mabs > mmax) {
+            if (auto mabs = abs(mat_(k, i)); mabs > mmax) {
                 mmax = mabs;
                 imax = k;
             }
@@ -121,7 +121,7 @@ DenseMatrix LupFactor::inverse() const
     return result;
 }
 
-double LupFactor::det() const
+Value LupFactor::det() const
 {
     auto result = mat_(0, 0);
 

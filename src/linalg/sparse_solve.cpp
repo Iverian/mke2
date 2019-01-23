@@ -2,13 +2,12 @@
 #include <csr_matrix.hpp>
 #include <debug.hpp>
 
-
 #include <cmath>
 
 using namespace std;
 
-void cax_y(Vec& res, double a, const Vec& x, const Vec& y);
-void cax_by_z(Vec& res, double a, const Vec& x, double b, const Vec& y,
+void cax_y(Vec& res, Value a, const Vec& x, const Vec& y);
+void cax_by_z(Vec& res, Value a, const Vec& x, Value b, const Vec& y,
               const Vec& z);
 void dot_diag(Vec& res, const CsrMatrix& lhs, const Vec& rhs);
 
@@ -35,7 +34,7 @@ Vec solve(const CsrMatrix& lhs, const Vec& rhs, Vec x0)
 
     bool success = false;
 
-    double diff = 0, res = 0, u = 1, a = 1, w = 1, b = 0;
+    Value diff = 0, res = 0, u = 1, a = 1, w = 1, b = 0;
     do {
         auto up = u;
         u = dot(r0, r);
@@ -114,7 +113,7 @@ Vec psolve(const CsrMatrix& lhs, const Vec& rhs, Vec x0)
 
     bool success = false;
 
-    double diff = 0, res = 0, u = 1, a = 1, w = 1, b = 0;
+    Value diff = 0, res = 0, u = 1, a = 1, w = 1, b = 0;
     do {
         auto up = u;
         u = dot(r0, r);
@@ -168,19 +167,19 @@ Vec psolve(const CsrMatrix& lhs, const Vec& rhs, Vec x0)
     return x;
 }
 
-void cax_y(Vec& res, double a, const Vec& x, const Vec& y)
+void cax_y(Vec& res, Value a, const Vec& x, const Vec& y)
 {
-    CsrMatrix::Index i, n = res.size();
+    Index i, n = res.size();
 
     for (i = 0; i < n; ++i) {
         res[i] = a * x[i] + y[i];
     }
 }
 
-void cax_by_z(Vec& res, double a, const Vec& x, double b, const Vec& y,
+void cax_by_z(Vec& res, Value a, const Vec& x, Value b, const Vec& y,
               const Vec& z)
 {
-    CsrMatrix::Index i, n = res.size();
+    Index i, n = res.size();
 
     for (i = 0; i < n; ++i) {
         res[i] = a * x[i] + b * y[i] + z[i];
@@ -189,7 +188,7 @@ void cax_by_z(Vec& res, double a, const Vec& x, double b, const Vec& y,
 
 void dot_diag(Vec& res, const CsrMatrix& lhs, const Vec& rhs)
 {
-    CsrMatrix::Index i, n = res.size();
+    Index i, n = res.size();
 
     for (i = 0; i < n; ++i) {
         res[i] = rhs[i] / lhs.diag()[i];

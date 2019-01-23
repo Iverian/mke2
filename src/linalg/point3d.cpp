@@ -5,7 +5,7 @@
 
 using namespace std;
 
-Point3d::Point3d(double x, double y, double z)
+Point3d::Point3d(Value x, Value y, Value z)
     : Super {x, y, z}
 {
 }
@@ -25,14 +25,14 @@ Point3d& Point3d::operator-=(const Point3d& rhs)
     }
     return *this;
 }
-Point3d& Point3d::operator*=(double rhs)
+Point3d& Point3d::operator*=(Value rhs)
 {
     for (size_t i = 0; i < size(); ++i) {
         (*this)[i] += rhs;
     }
     return *this;
 }
-Point3d& Point3d::operator/=(double rhs)
+Point3d& Point3d::operator/=(Value rhs)
 {
     for (size_t i = 0; i < size(); ++i) {
         (*this)[i] /= rhs;
@@ -52,7 +52,7 @@ ostream& operator<<(ostream& os, const Point3d& obj)
 
 bool operator==(const Point3d& lhs, const Point3d& rhs)
 {
-    double max = 0;
+    Value max = 0;
     for (size_t i = 0; i < lhs.size(); ++i) {
         if (auto cur = fabs(rhs[i] - lhs[i]); cur > max) {
             max = cur;
@@ -84,19 +84,19 @@ Point3d operator-(const Point3d& lhs, const Point3d& rhs)
     return (result -= rhs);
 }
 
-Point3d operator*(const Point3d& lhs, double rhs)
+Point3d operator*(const Point3d& lhs, Value rhs)
 {
     auto result = lhs;
     return (result *= rhs);
 }
 
-Point3d operator*(double lhs, const Point3d& rhs)
+Point3d operator*(Value lhs, const Point3d& rhs)
 {
     auto result = rhs;
     return (result *= lhs);
 }
 
-Point3d operator/(const Point3d& lhs, double rhs)
+Point3d operator/(const Point3d& lhs, Value rhs)
 {
     auto result = lhs;
     return (result /= rhs);
@@ -109,26 +109,26 @@ Point3d cross(const Point3d& lhs, const Point3d& rhs)
                    lhs[0] * rhs[1] - lhs[1] * rhs[0]);
 }
 
-double dot(const Point3d& lhs, const Point3d& rhs)
+Value dot(const Point3d& lhs, const Point3d& rhs)
 {
-    double result = 0;
+    Value result = 0;
     for (size_t i = 0; i < lhs.size(); ++i) {
         result += lhs[i] * rhs[i];
     }
     return result;
 }
 
-double triple(const Point3d& a, const Point3d& b, const Point3d& c)
+Value triple(const Point3d& a, const Point3d& b, const Point3d& c)
 {
     return dot(a, cross(b, c));
 }
 
-double sqr(const Point3d& obj)
+Value sqr(const Point3d& obj)
 {
     return dot(obj, obj);
 }
 
-double norm(const Point3d& obj)
+Value norm(const Point3d& obj)
 {
     return sqrt(sqr(obj));
 }
@@ -138,7 +138,7 @@ Point3d unit(const Point3d& obj)
     return obj / norm(obj);
 }
 
-double dist(const Point3d& lhs, const Point3d& rhs)
+Value dist(const Point3d& lhs, const Point3d& rhs)
 {
     return norm(rhs - lhs);
 }
@@ -148,9 +148,9 @@ bool isnear(const Point3d& lhs, const Point3d& rhs)
     return isnear(dist(lhs, rhs), 0);
 }
 
-vector<Point3d> combine(const initializer_list<double>& x,
-                        const initializer_list<double>& y,
-                        const initializer_list<double>& z)
+vector<Point3d> combine(const initializer_list<Value>& x,
+                        const initializer_list<Value>& y,
+                        const initializer_list<Value>& z)
 {
     vector<Point3d> result;
 

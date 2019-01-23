@@ -7,26 +7,27 @@
 #include <vector>
 
 #include "vec.hpp"
+#include "common_types.hpp"
 
 class Point3d;
 
-std::vector<Point3d> combine(const std::initializer_list<double>& x,
-                             const std::initializer_list<double>& y,
-                             const std::initializer_list<double>& z);
+std::vector<Point3d> combine(const std::initializer_list<Value>& x,
+                             const std::initializer_list<Value>& y,
+                             const std::initializer_list<Value>& z);
 
-class Point3d : public std::array<double, 3> {
-    static constexpr size_t N = 3;
-    using Super = std::array<double, N>;
+class Point3d : public std::array<Value, 3> {
+    static constexpr Index N = 3;
+    using Super = std::array<Value, N>;
 
 public:
     using Super::Super;
 
-    Point3d(double x, double y, double z);
+    Point3d(Value x, Value y, Value z);
 
     Point3d& operator+=(const Point3d& rhs);
     Point3d& operator-=(const Point3d& rhs);
-    Point3d& operator*=(double rhs);
-    Point3d& operator/=(double rhs);
+    Point3d& operator*=(Value rhs);
+    Point3d& operator/=(Value rhs);
 
     explicit operator Vec() const;
 
@@ -38,17 +39,17 @@ public:
     friend Point3d operator-(const Point3d& obj);
     friend Point3d operator+(const Point3d& lhs, const Point3d& rhs);
     friend Point3d operator-(const Point3d& lhs, const Point3d& rhs);
-    friend Point3d operator*(const Point3d& lhs, double rhs);
-    friend Point3d operator*(double lhs, const Point3d& rhs);
-    friend Point3d operator/(const Point3d& lhs, double rhs);
+    friend Point3d operator*(const Point3d& lhs, Value rhs);
+    friend Point3d operator*(Value lhs, const Point3d& rhs);
+    friend Point3d operator/(const Point3d& lhs, Value rhs);
 
-    friend double dot(const Point3d& lhs, const Point3d& rhs);
+    friend Value dot(const Point3d& lhs, const Point3d& rhs);
     friend Point3d cross(const Point3d& lhs, const Point3d& rhs);
-    friend double triple(const Point3d& a, const Point3d& b, const Point3d& c);
-    friend double sqr(const Point3d& obj);
-    friend double norm(const Point3d& obj);
+    friend Value triple(const Point3d& a, const Point3d& b, const Point3d& c);
+    friend Value sqr(const Point3d& obj);
+    friend Value norm(const Point3d& obj);
     friend Point3d unit(const Point3d& obj);
-    friend double dist(const Point3d& lhs, const Point3d& rhs);
+    friend Value dist(const Point3d& lhs, const Point3d& rhs);
     friend bool isnear(const Point3d& lhs, const Point3d& rhs);
 };
 
@@ -67,7 +68,7 @@ struct hash<Point3d> {
     }
 
 private:
-    hash<double> hasher_;
+    hash<Value> hasher_;
 };
 };
 

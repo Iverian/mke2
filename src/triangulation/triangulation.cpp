@@ -12,7 +12,7 @@
 using namespace std;
 
 Triangulation::Triangulation()
-    : dim_ {0, 0, 0}
+    : dim_()
     , size_(0)
     , nodes_()
     , elems_()
@@ -21,7 +21,7 @@ Triangulation::Triangulation()
 {
 }
 
-Triangulation::Triangulation(const array<double, 3>& dim)
+Triangulation::Triangulation(const array<Value, DIM>& dim)
     : dim_(dim)
     , size_(0)
     , nodes_()
@@ -31,7 +31,7 @@ Triangulation::Triangulation(const array<double, 3>& dim)
 {
 }
 
-const array<double, 3>& Triangulation::dim() const
+const array<Value, Triangulation::DIM>& Triangulation::dim() const
 {
     return dim_;
 }
@@ -41,7 +41,7 @@ const Triangulation::NodeContainer& Triangulation::nodes() const
     return nodes_;
 }
 
-const vector<pair<Triangulation::Index, Triangulation::SurfaceElement>>&
+const vector<pair<Index, Triangulation::SurfaceElement>>&
 Triangulation::triangles() const
 {
     return triangles_;
@@ -89,7 +89,7 @@ Triangulation::append_nodes(const vector<Point3d>& vp)
     return result;
 }
 
-Triangulation::Index Triangulation::NodePtr::index() const
+Index Triangulation::NodePtr::index() const
 {
     return ptr->second;
 }
@@ -109,7 +109,7 @@ Triangulation::SurfaceElement::Data Triangulation::SurfaceElement::data() const
     return {(*this)[0].point(), (*this)[1].point(), (*this)[2].point()};
 }
 
-double Triangulation::SurfaceElement::area() const
+Value Triangulation::SurfaceElement::area() const
 {
     auto d = data();
     return norm(cross(d[0] - d[2], d[1] - d[2])) / 2.;
@@ -135,7 +135,7 @@ Triangulation::FiniteElement::Data Triangulation::FiniteElement::data() const
             (*this)[3].point()};
 }
 
-double Triangulation::FiniteElement::volume() const
+Value Triangulation::FiniteElement::volume() const
 {
     auto d = data();
     return triple(d[0] - d[3], d[1] - d[3], d[2] - d[3]) / 6.;
@@ -201,12 +201,12 @@ void Triangulation::extract_triangles()
         }
     }
 }
-Triangulation Triangulation::cuboid(std::array<double, DIM> dim,
+Triangulation Triangulation::cuboid(std::array<Value, DIM> dim,
                                     std::array<Index, DIM> size)
 {
     Triangulation result(dim);
 
-    array<double, DIM> step;
+    array<Value, DIM> step;
     for (Index i = 0; i < DIM; ++i) {
         step[i] = dim[i] / size[i];
     }
@@ -240,7 +240,7 @@ Triangulation Triangulation::cuboid(std::array<double, DIM> dim,
     return result;
 }
 
-Triangulation Triangulation::cuboid(array<double, DIM> dim, Index scale)
+Triangulation Triangulation::cuboid(array<Value, DIM> dim, Index scale)
 {
     if (scale == 0) {
         scale = 1;
@@ -300,7 +300,7 @@ ostream& operator<<(ostream& os, const Triangulation& obj)
 }
 
 Triangulation Triangulation::from_msh(const char* filename,
-                                      array<double, DIM> dim)
+                                      array<Value, DIM> dim)
 {
     ifstream is(filename);
     Triangulation result(dim);
@@ -319,7 +319,7 @@ Triangulation Triangulation::from_msh(const char* filename,
 
     for (Index i = 0; i < node_count; ++i) {
         Index ind = 0;
-        double x = 0., y = 0., z = 0.;
+        Value x = 0., y = 0., z = 0.;
 
         is >> ind >> x >> y >> z;
         auto p = result.append_node({x, y, z});

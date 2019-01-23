@@ -7,7 +7,6 @@
 
 class LupFactor {
 public:
-    using Index = AbstractMatrix::Index;
     using PivotType = std::vector<Index>;
 
 
@@ -20,7 +19,7 @@ public:
     LupFactor& factor();
     Vec solve(const Vec& v) const;
     DenseMatrix inverse() const;
-    double det() const;
+    Value det() const;
 
 private:
     Index m_;

@@ -9,12 +9,11 @@
 
 class DokMatrix : public AbstractMatrix {
 public:
-    using Index2d = std::pair<Index, Index>;
     using DataContainer = std::map<Index2d, Value>;
 
     explicit DokMatrix(Index side = 0);
     Index size() const override;
-    Shape shape() const override;
+    Index2d shape() const override;
     Index non_zero() const noexcept;
 
     Value operator()(Index i, Index j) const;
@@ -32,7 +31,7 @@ private:
 };
 
 template <class Callable>
-DokMatrix::Value DokMatrix::modify(DokMatrix::Index2d ind, Callable&& f)
+Value DokMatrix::modify(Index2d ind, Callable&& f)
 {
     check_if(ind.first < m_ && ind.second < m_, "Index out of range");
 
