@@ -9,7 +9,6 @@ class LupFactor {
 public:
     using PivotType = std::vector<Index>;
 
-
     explicit LupFactor(const DenseMatrix& in);
     explicit LupFactor(DenseMatrix&& in);
 

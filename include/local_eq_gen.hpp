@@ -1,5 +1,5 @@
-#ifndef MKE2_INCLUDE_LOCAL_EQ_GEN_HPP
-#define MKE2_INCLUDE_LOCAL_EQ_GEN_HPP
+#ifndef MKE2_INCLUDE_LOCAL_EQ_GEN_HPP_
+#define MKE2_INCLUDE_LOCAL_EQ_GEN_HPP_
 
 #include <dense_matrix.hpp>
 #include <triangulation.hpp>
@@ -13,4 +13,4 @@ using LocalEqGen = std::function<std::pair<DenseMatrix, Vec>(
 LocalEqGen::result_type gen_local(const Triangulation& t,
                                   const Triangulation::FiniteElement& elem);
 
-#endif // MKE2_INCLUDE_LOCAL_EQ_GEN_HPP
+#endif // MKE2_INCLUDE_LOCAL_EQ_GEN_HPP_

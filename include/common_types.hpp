@@ -5,7 +5,6 @@
 #include <ostream>
 #include <utility>
 
-
 using Value = double;
 using Index = size_t;
 using Index2d = std::pair<Index, Index>;

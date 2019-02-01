@@ -1,5 +1,5 @@
-#ifndef MKE2_INCLUDE_TRIANGULATION_H_
-#define MKE2_INCLUDE_TRIANGULATION_H_
+#ifndef MKE2_INCLUDE_TRIANGULATION_HPP_
+#define MKE2_INCLUDE_TRIANGULATION_HPP_
 
 #include <array>
 #include <iostream>
@@ -164,4 +164,4 @@ private:
 
 }
 
-#endif // MKE2_INCLUDE_TRIANGULATION_H_
+#endif // MKE2_INCLUDE_TRIANGULATION_HPP_
